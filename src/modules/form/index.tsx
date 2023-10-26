@@ -41,17 +41,22 @@ function Form({ isSignInPage = true }) {
         }
     };
     return (
-        <div className="bg-white w-2/3 h-2/3 shadow-lg rounded-lg flex flex-col justify-center items-center">
-            <div className="text-4xl font-extrabold">
-                Welcome {isSignInPage && "Back"}
+        <div className="bg-white w-5/6 sm:w-2/3 md:1/2 lg:w-[720px] h-2/3 shadow-lg rounded-lg flex flex-col justify-center items-center overflow-auto">
+            {/* title section start */}
+            <div className="flex flex-col justify-center items-center px-6">
+                <div className="text-3xl sm:text-4xl font-bold">
+                    Welcome {isSignInPage && "Back"}
+                </div>
+                <div className="text-lg font-light mb-10">
+                    {isSignInPage
+                        ? "Sign in to get explored"
+                        : "Sign up to get started"}
+                </div>
             </div>
-            <div className="text-xl font-light mb-10">
-                {isSignInPage
-                    ? "Sign in to get explored"
-                    : "Sign up to get started"}
-            </div>
+            {/* title section end */}
+            {/* form section start */}
             <form
-                className="flex flex-col items-center w-full"
+                className="flex flex-col justify-center items-center w-full"
                 onSubmit={(e) => handleSubmit(e)}
             >
                 {!isSignInPage && (
@@ -94,13 +99,15 @@ function Form({ isSignInPage = true }) {
                 <Button
                     label={isSignInPage ? "Sign in" : "Sign up"}
                     type="submit"
-                    className="w-1/2 mb-2"
+                    className="w-5/6 sm:w-2/3 md:w-1/2 mb-2"
                 />
             </form>
-            <div>
+            {/* form section end */}
+            {/* footer section start */}
+            <div className=" px-6">
                 {isSignInPage
-                    ? "Didn't have an account?"
-                    : "Already have an account?"}
+                    ? "Didn't have an account? "
+                    : "Already have an account? "}
                 <span className="text-primary cursor-pointer underline">
                     {isSignInPage ? (
                         <Link href="sign_up">Sign up</Link>
@@ -109,6 +116,7 @@ function Form({ isSignInPage = true }) {
                     )}
                 </span>
             </div>
+            {/*  footer section end */}
         </div>
     );
 }

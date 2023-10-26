@@ -14,7 +14,7 @@ const Input = ({
     },
 }) => {
     return (
-        <div className={`w-1/2 ${className}`}>
+        <div className={`w-5/6 sm:w-2/3 md:w-1/2 ${className}`}>
             <label
                 htmlFor={name}
                 className="block mb-2 text-sm font-medium text-gray-500"
@@ -24,7 +24,7 @@ const Input = ({
             <input
                 type={type}
                 id={name}
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400dark:focus:ring-blue-50 dark:focus:border-blue-500 ${inputClassName}`}
+                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${inputClassName}`}
                 placeholder={placeholder}
                 required={isRequired}
                 value={value}
