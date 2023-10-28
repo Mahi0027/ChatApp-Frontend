@@ -1,5 +1,4 @@
 import Dashboard from "@/src/modules/dashboard";
-import Form from "@/src/modules/form";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function Home() {
