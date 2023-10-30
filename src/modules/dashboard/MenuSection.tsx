@@ -92,7 +92,7 @@ const MenuSection = ({
 
     return (
         <>
-            <div className="flex items-center m-8">
+            <div className="flex items-center my-8 mx-2">
                 <div className="border border-primary p-[2px] rounded-full">
                     <Image
                         src={AvatarIcon}
@@ -135,11 +135,13 @@ const MenuSection = ({
             </div>
             <hr />
 
-            <div className="h-3/4 mx-10 mt-10">
+            <div
+                className="h-4/5 md:h-4/5 mx-2 mt-10"
+            >
                 <div className="text-primary text-lg">
                     {showUsersFlag ? "Users" : "Chats"}
                 </div>
-                <div className="h-5/6 overflow-y-auto scroll-smooth">
+                <div className="h-full overflow-y-auto scroll-smooth pb-10">
                     {showUsersFlag ? (
                         <>
                             {listOfAllUsers.length > 0 ? (

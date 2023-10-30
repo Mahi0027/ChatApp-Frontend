@@ -1,12 +1,4 @@
 import React, { useEffect, useState } from "react";
-import AvatarIcon from "@/public/assets/avatar.svg";
-import PhoneIcon from "@/public/assets/phone.svg";
-import SendIcon from "@/public/assets/send.svg";
-import CirclePlusIcon from "@/public/assets/circlePlus.svg";
-import UsersIcon from "@/public/assets/users.svg";
-import MessagesIcon from "@/public/assets/messages.svg";
-import Image from "next/image";
-import Input from "@/src/components/input";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
 
@@ -42,6 +34,10 @@ const Dashboard = () => {
         email: "",
         fullName: "",
     });
+    const [menuSectionShowFlag, setMenuSectionShowFlag] =
+        useState<boolean>(true);
+    const [conversationSectionShowFlag, setConversationSectionShowFlag] =
+        useState<boolean>(false);
     const [conversations, setConversations] =
         useState<ListOfAllConversationType>([
             {
@@ -76,15 +72,49 @@ const Dashboard = () => {
                   }
                 : { id: "", email: "", fullName: "" }
         );
+
+        if (window.innerWidth < 640) {
+            setConversationSectionShowFlag(false);
+        } else {
+            setConversationSectionShowFlag(true);
+        }
+
+        // Add a resize event listener
+        window.addEventListener("resize", handleResizeScreenSize);
+
+        // Clean up the event listener when the component is unmounted
+        return () => {
+            window.removeEventListener("resize", handleResizeScreenSize);
+        };
     }, []);
 
-    useEffect(() => {
-        console.log("user data", adminUser);
-        console.log("conversation data", currentConversationUser);
-    }, [adminUser, currentConversationUser]);
+    const handleResizeScreenSize = () => {
+        if (window.innerWidth < 640) {
+            setMenuSectionShowFlag(true);
+            setConversationSectionShowFlag(false);
+        } else {
+            setMenuSectionShowFlag(true);
+            setConversationSectionShowFlag(true);
+        }
+    };
+
+    /* specially this function for mobile device. In this user can come on menu option and it work only if screen width size is smaller than 640px. */
+    const backToMenuOption = () => {
+        setMenuSectionShowFlag(true);
+        setConversationSectionShowFlag(false);
+    };
+    // useEffect(() => {
+    //     console.log("user data", adminUser);
+    //     console.log("conversation data", currentConversationUser);
+    // }, [adminUser, currentConversationUser]);
 
     /* fetching messages. */
     const fetchMessages = async (conversationId: string, user: any) => {
+        if (window.innerWidth < 640) {
+            setMenuSectionShowFlag(false);
+            setConversationSectionShowFlag(true);
+        }
+
         setCurrentConversationUser({ conversationId, user });
         const res = await fetch(
             `http://localhost:8000/api/message/${conversationId}`,
@@ -96,7 +126,6 @@ const Dashboard = () => {
             }
         );
         const result = await res.json();
-        console.log("result messages ->", result);
         setMessages(result);
     };
 
@@ -104,6 +133,10 @@ const Dashboard = () => {
     const fetchUser = async (userId: string, user: any) => {
         setNewUserDetails({ userId, user });
         sethHomePageForUserListFlag(false);
+        if (window.innerWidth < 640) {
+            setMenuSectionShowFlag(false);
+            setConversationSectionShowFlag(true);
+        }
     };
 
     /* create conversation. */
@@ -183,8 +216,11 @@ const Dashboard = () => {
                     workingData.receiverUser.fullName =
                         receiverUserData.fullName;
                 }
-                console.log("workingData",workingData);
-                fetchMessages(workingData.conversationId, workingData.receiverUser);
+                console.log("workingData", workingData);
+                fetchMessages(
+                    workingData.conversationId,
+                    workingData.receiverUser
+                );
                 setShowUsersFlag(false);
             }
         } catch (error) {
@@ -193,27 +229,33 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="w-screen flex">
-            <div className="w-1/4 h-screen bg-secondary">
-                <MenuSection
-                    adminUser={adminUser}
-                    fetchMessages={fetchMessages}
-                    showUsersFlag={showUsersFlag}
-                    setShowUsersFlag={setShowUsersFlag}
-                    fetchUser={fetchUser}
-                />
-            </div>
-            <div className="w-3/4 h-screen bg-white flex flex-col items-center">
-                <ConversationsList
-                    adminUser={adminUser}
-                    showUsersFlag={showUsersFlag}
-                    currentConversationUser={currentConversationUser}
-                    messages={messages}
-                    newUserDetails={newUserDetails}
-                    homePageForUserListFlag={homePageForUserListFlag}
-                    startConversation={startConversation}
-                />
-            </div>
+        <div className="w-screen flex overflow-hidden">
+            {/* I want to make dynamic width */}
+            {menuSectionShowFlag && (
+                <div className="w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen bg-secondary">
+                    <MenuSection
+                        adminUser={adminUser}
+                        fetchMessages={fetchMessages}
+                        showUsersFlag={showUsersFlag}
+                        setShowUsersFlag={setShowUsersFlag}
+                        fetchUser={fetchUser}
+                    />
+                </div>
+            )}
+            {conversationSectionShowFlag && (
+                <div className="w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen bg-white flex flex-col items-center">
+                    <ConversationsList
+                        adminUser={adminUser}
+                        showUsersFlag={showUsersFlag}
+                        currentConversationUser={currentConversationUser}
+                        messages={messages}
+                        newUserDetails={newUserDetails}
+                        homePageForUserListFlag={homePageForUserListFlag}
+                        startConversation={startConversation}
+                        backToMenuOption={backToMenuOption}
+                    />
+                </div>
+            )}
         </div>
     );
 };
