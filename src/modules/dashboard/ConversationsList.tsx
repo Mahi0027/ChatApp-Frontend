@@ -16,11 +16,19 @@ const ConversationsList = ({
     newUserDetails,
     homePageForUserListFlag,
     startConversation,
+    backToMenuOption,
 }) => {
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
+    const [showBackOption, setShowBackOption] = useState<boolean>(true);
+
     useEffect(() => {
         setEmoji(emojis[Math.floor(Math.random() * 320)]);
+        if (window.innerWidth < 640) {
+            setShowBackOption(true);
+        } else {
+            setShowBackOption(false);
+        }
     }, []);
     /* send message */
     const sendMessage = async () => {
@@ -31,7 +39,6 @@ const ConversationsList = ({
             receiverId: "",
         };
         setText("");
-        console.log("sending data", inputData);
         const res = await fetch("http://localhost:8000/api/message", {
             method: "POST",
             headers: {
@@ -48,23 +55,31 @@ const ConversationsList = ({
     };
     return (
         <>
+            {showBackOption && (
+                <div
+                    className="fixed top-0 left-5 font-bold text-5xl cursor-pointer"
+                    onClick={backToMenuOption}
+                >
+                    &#8592;
+                </div>
+            )}
             {showUsersFlag ? (
                 homePageForUserListFlag ? (
                     <div className="h-3/4 w-full flex flex-col justify-center">
-                        <div className="text-center text-lg font-semibold">
+                        <div className="text-center text-lg font-semibold px-5">
                             No conversation selected yet. Please choose user and
                             start conversation.
                         </div>
                         <div className="text-center text-3xl mt-5">{emoji}</div>
                     </div>
                 ) : (
-                    <div className="h-3/4 w-full flex flex-col justify-center">
+                    <div className="h-3/4 w-full flex flex-col justify-center items-center">
                         <div className="text-center">
-                            <div className="flex flex-col items-center m-10">
+                            <div className="flex flex-col justify-center items-center m-10">
                                 <Image
                                     src={AvatarIcon}
-                                    width={150}
-                                    height={150}
+                                    width={400}
+                                    height={400}
                                     alt={"AvatarIcon"}
                                 />
                             </div>
@@ -79,7 +94,7 @@ const ConversationsList = ({
                             <Button
                                 label={`Start Conversation with ${newUserDetails?.user.fullName}`}
                                 type="button"
-                                className="w-1/2 mb-2 transform transition-transform hover:scale-105"
+                                className="w-full mb-2 transform transition-transform hover:scale-105"
                                 onClick={() =>
                                     startConversation(newUserDetails?.userId)
                                 }
@@ -91,7 +106,7 @@ const ConversationsList = ({
                 <>
                     {/* current chat user name and status. */}
                     {currentConversationUser?.user?.fullName && (
-                        <div className="w-3/4 bg-secondary h-[80px] my-14 rounded-full flex items-center px-14 ">
+                        <div className="w-4/5 sm:w-3/4 bg-secondary h-[80px] my-14 rounded-full flex items-center px-14 ">
                             <div className="cursor-pointer">
                                 <Image
                                     src={AvatarIcon}
@@ -144,7 +159,7 @@ const ConversationsList = ({
                         </div>
                     ) : (
                         <div className="h-3/4 w-full flex flex-col justify-center">
-                            <div className="text-center text-lg font-semibold">
+                            <div className="text-center text-lg font-semibold px-5">
                                 No Messages yet. say <b>Hi</b> and start
                                 conversation with{" "}
                                 {currentConversationUser?.user?.fullName}
