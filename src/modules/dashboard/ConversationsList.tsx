@@ -8,6 +8,16 @@ import CirclePlusIcon from "@/public/assets/circlePlus.svg";
 import Button from "@/src/components/button";
 import emojis from "@/public/assets/emojis.json";
 
+type ConversationListType = {
+    adminUser: any;
+    showUsersFlag: boolean;
+    currentConversationUser: any;
+    messages: any;
+    newUserDetails: any;
+    homePageForUserListFlag: boolean;
+    startConversation: (arg0: string) => void;
+    backToMenuOption: () => void;
+};
 const ConversationsList = ({
     adminUser,
     showUsersFlag,
@@ -17,7 +27,7 @@ const ConversationsList = ({
     homePageForUserListFlag,
     startConversation,
     backToMenuOption,
-}) => {
+}: ConversationListType) => {
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
@@ -106,7 +116,7 @@ const ConversationsList = ({
                 <>
                     {/* current chat user name and status. */}
                     {currentConversationUser?.user?.fullName && (
-                        <div className="w-4/5 sm:w-3/4 bg-secondary h-[80px] my-14 rounded-full flex items-center px-14 ">
+                        <div className="w-4/5 sm:w-3/4 bg-secondary h-[80px] mt-14 mb-0.5 rounded-full flex items-center px-4 md:px-6">
                             <div className="cursor-pointer">
                                 <Image
                                     src={AvatarIcon}
@@ -115,7 +125,7 @@ const ConversationsList = ({
                                     height={50}
                                 />
                             </div>
-                            <div className="ml-6 mr-auto">
+                            <div className="ml-2 mr-auto">
                                 <h3 className="text-lg">
                                     {currentConversationUser?.user?.fullName}
                                 </h3>
@@ -135,22 +145,35 @@ const ConversationsList = ({
                     )}
 
                     {/* message box. */}
-
                     {messages.length > 0 ? (
                         <div className="h-3/4 w-full overflow-y-auto scroll-smooth">
-                            <div className="p-10">
+                            <div className="p-2 sm:p-5 md:p-10">
                                 {messages.map(
-                                    ({ message, user: { id } }, index) => {
+                                    (
+                                        {
+                                            message,
+                                            user: { id },
+                                        }: { message: any; user: { id: any } },
+                                        index: number
+                                    ) => {
                                         return (
                                             <div
                                                 key={index}
-                                                className={`max-w-[40%] rounded-b-3xl p-4  mb-6 ${
+                                                className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 mb-6 ${
                                                     id === adminUser?.id
-                                                        ? "bg-primary rounded-tl-3xl ml-auto text-white"
-                                                        : "bg-secondary rounded-tr-3xl"
+                                                        ? "ml-auto items-end"
+                                                        : "items-start"
                                                 }`}
                                             >
-                                                {message}
+                                                <div
+                                                    className={`rounded-b-3xl p-4 ${
+                                                        id === adminUser?.id
+                                                            ? "bg-primary rounded-tl-3xl text-white"
+                                                            : "bg-secondary rounded-tr-3xl"
+                                                    }`}
+                                                >
+                                                    {message}
+                                                </div>
                                             </div>
                                         );
                                     }
@@ -171,11 +194,11 @@ const ConversationsList = ({
                     )}
                     {/* texting area. */}
                     {currentConversationUser?.user?.fullName && (
-                        <div className="p-14 w-full flex items-center">
+                        <div className="p-4 sm:p-6 md:p-8 w-full flex items-center">
                             <Input
                                 placeholder="Type a message..."
                                 className="w-full"
-                                inputClassName="p-2 px-4 rounded-xl border-0 shadow-lg rounded-full bg-secondary focus:ring-0 focus:border-0 outline-none"
+                                inputClassName="p-2 rounded-xl border-0 shadow-lg rounded-full bg-secondary focus:ring-0 focus:border-0 outline-none"
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
                             />

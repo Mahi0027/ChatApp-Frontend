@@ -20,13 +20,20 @@ type ConversationsListType = {
     };
 }[];
 
+type MenuSectionType = {
+    adminUser: any;
+    fetchMessages: (arg0: string, arg1: any) => void;
+    showUsersFlag: boolean;
+    setShowUsersFlag: (arg0: boolean) => void;
+    fetchUser: (arg0: string, arg1: any) => void;
+};
 const MenuSection = ({
     adminUser,
     fetchMessages,
     showUsersFlag,
     setShowUsersFlag,
     fetchUser,
-}) => {
+}: MenuSectionType) => {
     const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
         {
             userId: "",
@@ -135,9 +142,7 @@ const MenuSection = ({
             </div>
             <hr />
 
-            <div
-                className="h-4/5 md:h-4/5 mx-2 mt-10"
-            >
+            <div className="h-4/5 md:h-4/5 mx-2 mt-10">
                 <div className="text-primary text-lg">
                     {showUsersFlag ? "Users" : "Chats"}
                 </div>

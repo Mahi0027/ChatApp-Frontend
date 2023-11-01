@@ -141,7 +141,6 @@ const Dashboard = () => {
 
     /* create conversation. */
     const startConversation = async (newUserId: string) => {
-        // console.log("get userId",userId);
         try {
             const inputData = {
                 senderId: adminUser.id,
