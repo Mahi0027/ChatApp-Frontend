@@ -14,7 +14,7 @@ const Input = ({
     },
 }) => {
     return (
-        <div className={`w-5/6 sm:w-2/3 md:w-1/2 ${className}`}>
+        <div className={`w-5/6 ${className}`}>
             <label
                 htmlFor={name}
                 className="block mb-2 text-sm font-medium text-gray-500"

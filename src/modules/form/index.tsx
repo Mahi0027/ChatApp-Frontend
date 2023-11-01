@@ -77,7 +77,7 @@ function Form({ isSignInPage = true }) {
                             name="name"
                             placeholder="Enter your full name"
                             isRequired={true}
-                            className="mb-6"
+                            className="mb-6 sm:w-2/3 md:w-1/2"
                             value={data.fullName}
                             onChange={(e: any) =>
                                 setData({
@@ -93,7 +93,7 @@ function Form({ isSignInPage = true }) {
                         type="email"
                         placeholder="Enter your email"
                         isRequired={true}
-                        className="mb-6"
+                        className="mb-6 sm:w-2/3 md:w-1/2"
                         value={data.email}
                         onChange={(e: any) =>
                             setData({ ...data, email: e.target.value })
@@ -105,7 +105,7 @@ function Form({ isSignInPage = true }) {
                         type="password"
                         placeholder="Enter your password"
                         isRequired={true}
-                        className="mb-10"
+                        className="mb-10 sm:w-2/3 md:w-1/2"
                         value={data.password}
                         onChange={(e: any) =>
                             setData({ ...data, password: e.target.value })
