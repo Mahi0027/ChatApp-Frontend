@@ -5,8 +5,8 @@ import UsersIcon from "@/public/assets/users.svg";
 import MessagesIcon from "@/public/assets/messages.svg";
 
 type ListOfAllUserType = {
-    userId: string;
     user: {
+        id: string;
         email: string;
         fullName: string;
     };
@@ -15,6 +15,7 @@ type ListOfAllUserType = {
 type ConversationsListType = {
     conversationId: string;
     user: {
+        id: string;
         email: string;
         fullName: string;
     };
@@ -36,8 +37,8 @@ const MenuSection = ({
 }: MenuSectionType) => {
     const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
         {
-            userId: "",
             user: {
+                id: "",
                 email: "",
                 fullName: "",
             },
@@ -48,6 +49,7 @@ const MenuSection = ({
             {
                 conversationId: "",
                 user: {
+                    id: "",
                     email: "",
                     fullName: "",
                 },
@@ -77,8 +79,6 @@ const MenuSection = ({
             }
         );
         const result = await res.json();
-        console.log("conversation list: ", result);
-
         setConversationsList(result);
         setShowUsersFlag(false);
     };
@@ -92,7 +92,6 @@ const MenuSection = ({
             },
         });
         const result = await res.json();
-        console.log("all users: ", result);
         setListOfAllUsers(result);
         setShowUsersFlag(true);
     };
@@ -151,8 +150,8 @@ const MenuSection = ({
                         <>
                             {listOfAllUsers.length > 0 ? (
                                 listOfAllUsers.map(
-                                    ({ userId, user }, index: number) => {
-                                        if (userId !== adminUser?.id) {
+                                    ({ user }, index: number) => {
+                                        if (user.id !== adminUser?.id) {
                                             return (
                                                 <div
                                                     className="py-6 border-b border-b-gray-300"
@@ -162,7 +161,7 @@ const MenuSection = ({
                                                         className="cursor-pointer flex items-center"
                                                         onClick={() => {
                                                             fetchUser(
-                                                                userId,
+                                                                user.id,
                                                                 user
                                                             );
                                                         }}
