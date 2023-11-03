@@ -15,7 +15,6 @@ const ProtectedRoute = ({
             typeof window !== "undefined" &&
             localStorage.getItem("user:token") !== null;
 
-        console.log("isLoggedIn>> ", isLoggedIn);
         if (isLoggedIn && auth) return true;
         return false;
     }, []);

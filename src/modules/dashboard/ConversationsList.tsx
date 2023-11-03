@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import AvatarIcon from "@/public/assets/avatar.svg";
 import PhoneIcon from "@/public/assets/phone.svg";
@@ -10,9 +10,11 @@ import emojis from "@/public/assets/emojis.json";
 
 type ConversationListType = {
     adminUser: any;
+    socket: any;
     showUsersFlag: boolean;
     currentConversationUser: any;
     messages: any;
+    setMessages: (arg0: any) => void;
     newUserDetails: any;
     homePageForUserListFlag: boolean;
     startConversation: (arg0: string) => void;
@@ -20,9 +22,11 @@ type ConversationListType = {
 };
 const ConversationsList = ({
     adminUser,
+    socket,
     showUsersFlag,
     currentConversationUser,
     messages,
+    setMessages,
     newUserDetails,
     homePageForUserListFlag,
     startConversation,
@@ -31,6 +35,7 @@ const ConversationsList = ({
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
+    const containerRef = useRef(null);
 
     useEffect(() => {
         setEmoji(emojis[Math.floor(Math.random() * 320)]);
@@ -39,15 +44,42 @@ const ConversationsList = ({
         } else {
             setShowBackOption(false);
         }
+        scrollToBottom();
     }, []);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    // Function to scroll to the bottom of the container
+    const scrollToBottom = () => {
+        if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+    };
+
     /* send message */
     const sendMessage = async () => {
         const inputData = {
             conversationId: currentConversationUser?.conversationId,
             senderId: adminUser?.id,
             message: text,
-            receiverId: "",
+            receiverId: currentConversationUser?.user?.id,
         };
+
+        setMessages((prevData: any) => [
+            ...prevData,
+            {
+                user: {
+                    id: adminUser.id,
+                    email: adminUser.email,
+                    fullName: adminUser.fullName,
+                },
+                message: text,
+            },
+        ]);
+
+        socket?.emit("sendMessage", inputData);
         setText("");
         const res = await fetch("http://localhost:8000/api/message", {
             method: "POST",
@@ -58,7 +90,6 @@ const ConversationsList = ({
         });
         if (res.status === 200) {
             const result = await res.json();
-            console.log("sending response: ", result);
         } else {
             console.log("invalid inputs");
         }
@@ -146,7 +177,10 @@ const ConversationsList = ({
 
                     {/* message box. */}
                     {messages.length > 0 ? (
-                        <div className="h-3/4 w-full overflow-y-auto scroll-smooth">
+                        <div
+                            className="h-3/4 w-full overflow-y-auto scroll-smooth"
+                            ref={containerRef}
+                        >
                             <div className="p-2 sm:p-5 md:p-10">
                                 {messages.map(
                                     (

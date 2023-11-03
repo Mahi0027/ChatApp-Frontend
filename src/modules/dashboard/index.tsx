@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
+import { io } from "socket.io-client";
 
+// const socket = io("http://localhost:3001");
 type adminUserType = {
     id: string;
     email: string;
@@ -10,7 +12,11 @@ type adminUserType = {
 
 type CurrentConversationUserType = {
     conversationId: string;
-    user: any;
+    user: {
+        id: string;
+        email: string;
+        fullName: string;
+    };
 };
 
 type ListOfAllConversationType = {
@@ -29,6 +35,7 @@ type NewUserDetailsType = {
 };
 
 const Dashboard = () => {
+    const [socket, setSocket] = useState<any | null>(null);
     const [adminUser, setAdminUser] = useState<adminUserType>({
         id: "",
         email: "",
@@ -48,9 +55,12 @@ const Dashboard = () => {
                 },
             },
         ]);
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState<any>([]);
     const [currentConversationUser, setCurrentConversationUser] =
-        useState<CurrentConversationUserType>({ conversationId: "", user: {} });
+        useState<CurrentConversationUserType>({
+            conversationId: "",
+            user: { id: "", email: "", fullName: "" },
+        });
     const [showUsersFlag, setShowUsersFlag] = useState<boolean>(false);
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
@@ -63,6 +73,9 @@ const Dashboard = () => {
         useState<boolean>(true);
 
     useEffect(() => {
+        /* create socket user */
+        setSocket(io("http://localhost:8080"));
+
         setAdminUser(
             typeof localStorage !== "undefined"
                 ? JSON.parse(localStorage.getItem("user:detail") || "null") ?? {
@@ -88,6 +101,39 @@ const Dashboard = () => {
         };
     }, []);
 
+    useEffect(() => {
+        socket?.emit("addUser", adminUser?.id);
+        socket?.on("getUsers", (adminUsers: any) => {
+            console.log("active users", adminUsers);
+        });
+        socket?.on(
+            "getMessage",
+            ({
+                conversationId,
+                senderId,
+                message,
+                receiver,
+            }: {
+                conversationId: string;
+                senderId: string;
+                message: string;
+                receiver: any;
+            }) => {
+                setMessages((prevData: any) => [
+                    ...prevData,
+                    {
+                        user: {
+                            id: currentConversationUser.user.id,
+                            email: currentConversationUser.user.email,
+                            fullName: currentConversationUser.user.fullName,
+                        },
+                        message: message,
+                    },
+                ]);
+            }
+        );
+    }, [socket]);
+
     const handleResizeScreenSize = () => {
         if (window.innerWidth < 640) {
             setMenuSectionShowFlag(true);
@@ -103,10 +149,11 @@ const Dashboard = () => {
         setMenuSectionShowFlag(true);
         setConversationSectionShowFlag(false);
     };
-    // useEffect(() => {
-    //     console.log("user data", adminUser);
-    //     console.log("conversation data", currentConversationUser);
-    // }, [adminUser, currentConversationUser]);
+
+    useEffect(() => {
+        console.log("user data", adminUser);
+        console.log("conversation data", currentConversationUser);
+    }, [adminUser, currentConversationUser]);
 
     /* fetching messages. */
     const fetchMessages = async (conversationId: string, user: any) => {
@@ -146,7 +193,6 @@ const Dashboard = () => {
                 senderId: adminUser.id,
                 receiverId: newUserId,
             };
-            console.log("conversation input data:", inputData);
 
             const allConversationsRes = await fetch(
                 "http://localhost:8000/api/conversations",
@@ -159,13 +205,13 @@ const Dashboard = () => {
             );
             if (allConversationsRes.status === 200) {
                 const allConversationsResult = await allConversationsRes.json();
-                console.log("allConversationsResult", allConversationsResult);
                 // let findConversationFlag = false;
                 // let conversationId = "";
                 let workingData = {
                     findConversationFlag: false,
                     conversationId: "",
                     receiverUser: {
+                        id: "",
                         email: "",
                         fullName: "",
                     },
@@ -211,11 +257,11 @@ const Dashboard = () => {
 
                 if (receiverUserRes.status === 200) {
                     const receiverUserData = await receiverUserRes.json();
+                    workingData.receiverUser.id = receiverUserData._id;
                     workingData.receiverUser.email = receiverUserData.email;
                     workingData.receiverUser.fullName =
                         receiverUserData.fullName;
                 }
-                console.log("workingData", workingData);
                 fetchMessages(
                     workingData.conversationId,
                     workingData.receiverUser
@@ -245,9 +291,11 @@ const Dashboard = () => {
                 <div className="w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen bg-white flex flex-col items-center">
                     <ConversationsList
                         adminUser={adminUser}
+                        socket={socket}
                         showUsersFlag={showUsersFlag}
                         currentConversationUser={currentConversationUser}
                         messages={messages}
+                        setMessages={setMessages}
                         newUserDetails={newUserDetails}
                         homePageForUserListFlag={homePageForUserListFlag}
                         startConversation={startConversation}
