@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import AvatarIcon from "@/public/assets/avatar.svg";
 import PhoneIcon from "@/public/assets/phone.svg";
@@ -7,6 +7,7 @@ import SendIcon from "@/public/assets/send.svg";
 import CirclePlusIcon from "@/public/assets/circlePlus.svg";
 import Button from "@/src/components/button";
 import emojis from "@/public/assets/emojis.json";
+import context from "@/src/context";
 
 type ConversationListType = {
     adminUser: any;
@@ -32,10 +33,12 @@ const ConversationsList = ({
     startConversation,
     backToMenuOption,
 }: ConversationListType) => {
+    const { activeUsers } = useContext(context);
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
-    const containerRef = useRef(null);
+    const [onlineFlag, setOnlineFlag] = useState<boolean>(false);
+    const containerRef = useRef<any>(null);
 
     useEffect(() => {
         setEmoji(emojis[Math.floor(Math.random() * 320)]);
@@ -51,6 +54,16 @@ const ConversationsList = ({
         scrollToBottom();
     }, [messages]);
 
+    useEffect(() => {
+        var foundOnlineFlag = false;
+        for (let activeUser of activeUsers) {
+            if (activeUser.userId === currentConversationUser.user.id) {
+                setOnlineFlag(true);
+                foundOnlineFlag = true;
+            }
+        }
+        if (!foundOnlineFlag) setOnlineFlag(false);
+    }, [activeUsers]);
     // Function to scroll to the bottom of the container
     const scrollToBottom = () => {
         if (containerRef.current) {
@@ -161,7 +174,7 @@ const ConversationsList = ({
                                     {currentConversationUser?.user?.fullName}
                                 </h3>
                                 <p className="text-xs font-light text-gray-500">
-                                    Active
+                                    {onlineFlag ? "Online" : ""}
                                 </p>
                             </div>
                             <div className="cursor-pointer">

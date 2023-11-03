@@ -19,8 +19,16 @@ export default function App({ Component, pageProps }: AppProps) {
             status: false,
         });
 
+    const [activeUsers, setActiveUsers] = useState<any | null>(null);
     return (
-        <MyContext.Provider value={{ notificationData, setNotificationData }}>
+        <MyContext.Provider
+            value={{
+                notificationData,
+                setNotificationData,
+                activeUsers,
+                setActiveUsers,
+            }}
+        >
             <Notification
                 type={notificationData.type}
                 heading={notificationData.heading}

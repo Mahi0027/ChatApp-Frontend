@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
 import { io } from "socket.io-client";
+import context from "@/src/context";
 
-// const socket = io("http://localhost:3001");
 type adminUserType = {
     id: string;
     email: string;
@@ -36,6 +36,7 @@ type NewUserDetailsType = {
 
 const Dashboard = () => {
     const [socket, setSocket] = useState<any | null>(null);
+    const { setActiveUsers } = useContext(context);
     const [adminUser, setAdminUser] = useState<adminUserType>({
         id: "",
         email: "",
@@ -103,8 +104,8 @@ const Dashboard = () => {
 
     useEffect(() => {
         socket?.emit("addUser", adminUser?.id);
-        socket?.on("getUsers", (adminUsers: any) => {
-            console.log("active users", adminUsers);
+        socket?.on("getUsers", (activeUsers: any) => {
+            setActiveUsers(activeUsers);
         });
         socket?.on(
             "getMessage",
