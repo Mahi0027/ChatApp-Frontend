@@ -56,6 +56,8 @@ const ConversationsList = ({
 
     useEffect(() => {
         var foundOnlineFlag = false;
+        console.log("activeUsers", activeUsers);
+
         for (let activeUser of activeUsers) {
             if (activeUser.userId === currentConversationUser.user.id) {
                 setOnlineFlag(true);
@@ -63,7 +65,7 @@ const ConversationsList = ({
             }
         }
         if (!foundOnlineFlag) setOnlineFlag(false);
-    }, [activeUsers]);
+    }, [activeUsers, currentConversationUser.user.id]);
     // Function to scroll to the bottom of the container
     const scrollToBottom = () => {
         if (containerRef.current) {
