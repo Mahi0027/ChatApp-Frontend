@@ -151,11 +151,6 @@ const Dashboard = () => {
         setConversationSectionShowFlag(false);
     };
 
-    useEffect(() => {
-        console.log("user data", adminUser);
-        console.log("conversation data", currentConversationUser);
-    }, [adminUser, currentConversationUser]);
-
     /* fetching messages. */
     const fetchMessages = async (conversationId: string, user: any) => {
         if (window.innerWidth < 640) {

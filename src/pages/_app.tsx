@@ -19,7 +19,7 @@ export default function App({ Component, pageProps }: AppProps) {
             status: false,
         });
 
-    const [activeUsers, setActiveUsers] = useState<any | null>(null);
+    const [activeUsers, setActiveUsers] = useState<any>([]);
     return (
         <MyContext.Provider
             value={{
