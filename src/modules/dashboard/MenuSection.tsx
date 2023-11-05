@@ -12,28 +12,25 @@ type ListOfAllUserType = {
     };
 }[];
 
-type ConversationsListType = {
-    conversationId: string;
-    user: {
-        id: string;
-        email: string;
-        fullName: string;
-    };
-}[];
-
 type MenuSectionType = {
     adminUser: any;
+    conversationsList: any;
     fetchMessages: (arg0: string, arg1: any) => void;
     showUsersFlag: boolean;
     setShowUsersFlag: (arg0: boolean) => void;
     fetchUser: (arg0: string, arg1: any) => void;
+    showListOfAllConversations: () => void;
+    unreadMessagesCount: any;
 };
 const MenuSection = ({
     adminUser,
+    conversationsList,
     fetchMessages,
     showUsersFlag,
     setShowUsersFlag,
     fetchUser,
+    showListOfAllConversations,
+    unreadMessagesCount,
 }: MenuSectionType) => {
     const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
         {
@@ -44,44 +41,23 @@ const MenuSection = ({
             },
         },
     ]);
-    const [conversationsList, setConversationsList] =
-        useState<ConversationsListType>([
-            {
-                conversationId: "",
-                user: {
-                    id: "",
-                    email: "",
-                    fullName: "",
-                },
-            },
-        ]);
 
     useEffect(() => {
-        showListOfAllConversations();
+        if (showUsersFlag) showListOfAllUser();
     }, []);
 
-    /* show list of all conversations. */
-    const showListOfAllConversations = async () => {
-        var loggedUserId = adminUser.id;
-        if (loggedUserId === "") {
-            const loggedInUser = JSON.parse(
-                localStorage.getItem("user:detail") || "null"
-            );
-            loggedUserId = (loggedInUser?.id as string) || "";
-        }
-        const res = await fetch(
-            `http://localhost:8000/api/conversations/${loggedUserId} `,
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        const result = await res.json();
-        setConversationsList(result);
-        setShowUsersFlag(false);
-    };
+    useEffect(() => {
+        setChosenListOfItem(-1);
+    }, [showUsersFlag]);
+
+    const [chosenListOfItem, setChosenListOfItem] = useState(-1);
+    useEffect(() => {
+        console.log("listOfAllUsers", listOfAllUsers);
+    }, [listOfAllUsers]);
+
+    useEffect(() => {
+        console.log("conversationsList", conversationsList);
+    }, [conversationsList]);
 
     /* show list of all users */
     const showListOfAllUser = async () => {
@@ -154,12 +130,20 @@ const MenuSection = ({
                                         if (user.id !== adminUser?.id) {
                                             return (
                                                 <div
-                                                    className="py-6 border-b border-b-gray-300"
+                                                    className={`py-6 border-b border-b-gray-300 ${
+                                                        chosenListOfItem ===
+                                                        index
+                                                            ? "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                                            : ""
+                                                    }`}
                                                     key={index}
                                                 >
                                                     <div
-                                                        className="cursor-pointer flex items-center"
+                                                        className={`cursor-pointer flex items-center`}
                                                         onClick={() => {
+                                                            setChosenListOfItem(
+                                                                index
+                                                            );
                                                             fetchUser(
                                                                 user.id,
                                                                 user
@@ -201,17 +185,30 @@ const MenuSection = ({
                             {conversationsList.length > 0 ? (
                                 conversationsList.map(
                                     (
-                                        { conversationId, user },
+                                        {
+                                            conversationId,
+                                            user,
+                                        }: {
+                                            conversationId: string;
+                                            user: any;
+                                        },
                                         index: number
                                     ) => {
                                         return (
                                             <div
-                                                className="py-6 border-b border-b-gray-300"
+                                                className={`py-6 border-b border-b-gray-300 ${
+                                                    chosenListOfItem === index
+                                                        ? "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                                        : ""
+                                                }`}
                                                 key={index}
                                             >
                                                 <div
                                                     className="cursor-pointer flex items-center"
                                                     onClick={() => {
+                                                        setChosenListOfItem(
+                                                            index
+                                                        );
                                                         fetchMessages(
                                                             conversationId,
                                                             user
@@ -234,6 +231,17 @@ const MenuSection = ({
                                                             {user?.email}
                                                         </p>
                                                     </div>
+                                                    {unreadMessagesCount[
+                                                        user?.id
+                                                    ] > 0 && (
+                                                        <div className="ml-auto mx-10  bg-blue-400 rounded-xl px-2 text-sm text-white">
+                                                            {
+                                                                unreadMessagesCount[
+                                                                    user.id
+                                                                ]
+                                                            }
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );

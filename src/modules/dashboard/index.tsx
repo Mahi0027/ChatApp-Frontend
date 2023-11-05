@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
 import { io } from "socket.io-client";
@@ -34,35 +34,57 @@ type NewUserDetailsType = {
     };
 };
 
+type ConversationsListType = {
+    conversationId: string;
+    user: {
+        id: string;
+        email: string;
+        fullName: string;
+    };
+}[];
+
+type UnreadMessagesCountType = {
+    conversationUserId: string;
+    messagesCount: number;
+}[];
+
 const Dashboard = () => {
     const [socket, setSocket] = useState<any | null>(null);
-    const { setActiveUsers } = useContext(context);
+    const { setActiveUsers } =
+        useContext(context); /* to get details of online users. */
     const [adminUser, setAdminUser] = useState<adminUserType>({
         id: "",
         email: "",
         fullName: "",
-    });
+    }); /* admin user */
     const [menuSectionShowFlag, setMenuSectionShowFlag] =
-        useState<boolean>(true);
+        useState<boolean>(true); /* flag to show/hide menu section. */
     const [conversationSectionShowFlag, setConversationSectionShowFlag] =
-        useState<boolean>(false);
-    const [conversations, setConversations] =
-        useState<ListOfAllConversationType>([
-            {
-                conversationId: "",
-                user: {
-                    email: "",
-                    fullName: "",
-                },
-            },
-        ]);
-    const [messages, setMessages] = useState<any>([]);
+        useState<boolean>(false); /* flag to show/hide conversation section. */
+    // const [conversations, setConversations] =
+    //     useState<ListOfAllConversationType>([
+    //         {
+    //             conversationId: "",
+    //             user: {
+    //                 email: "",
+    //                 fullName: "",
+    //             },
+    //         },
+    //     ]);
+    const [messages, setMessages] = useState<any>(
+        []
+    ); /* store current selected user's all message. */
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState<any>({});
     const [currentConversationUser, setCurrentConversationUser] =
         useState<CurrentConversationUserType>({
             conversationId: "",
             user: { id: "", email: "", fullName: "" },
-        });
-    const [showUsersFlag, setShowUsersFlag] = useState<boolean>(false);
+        }); /* store current user details with whom admin user is talking. */
+    const currentConversationUserRef = useRef<CurrentConversationUserType>(
+        currentConversationUser
+    ); /* store current user details with whom admin user is talking in ref for using in socket. */
+    const [showUsersFlag, setShowUsersFlag] =
+        useState<boolean>(false); /* it's for show/hide user/message icon. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
         user: {
@@ -72,6 +94,24 @@ const Dashboard = () => {
     });
     const [homePageForUserListFlag, sethHomePageForUserListFlag] =
         useState<boolean>(true);
+    const [
+        homePageForConversationListFlag,
+        setHomePageForConversationListFlag,
+    ] = useState<boolean>(true);
+
+    const [conversationsList, setConversationsList] =
+        useState<ConversationsListType>([
+            {
+                conversationId: "",
+                user: {
+                    id: "",
+                    email: "",
+                    fullName: "",
+                },
+            },
+        ]);
+    const conversationsListRef =
+        useRef<ConversationsListType>(conversationsList);
 
     useEffect(() => {
         /* create socket user */
@@ -86,6 +126,8 @@ const Dashboard = () => {
                   }
                 : { id: "", email: "", fullName: "" }
         );
+
+        showListOfAllConversations();
 
         if (window.innerWidth < 640) {
             setConversationSectionShowFlag(false);
@@ -103,13 +145,21 @@ const Dashboard = () => {
     }, []);
 
     useEffect(() => {
+        currentConversationUserRef.current = currentConversationUser;
+    }, [currentConversationUser]);
+
+    useEffect(() => {
+        conversationsListRef.current = conversationsList;
+    }, [conversationsList]);
+
+    useEffect(() => {
         socket?.emit("addUser", adminUser?.id);
         socket?.on("getUsers", (activeUsers: any) => {
             setActiveUsers(activeUsers);
         });
         socket?.on(
             "getMessage",
-            ({
+            async ({
                 conversationId,
                 senderId,
                 message,
@@ -124,16 +174,83 @@ const Dashboard = () => {
                     ...prevData,
                     {
                         user: {
-                            id: currentConversationUser.user.id,
-                            email: currentConversationUser.user.email,
-                            fullName: currentConversationUser.user.fullName,
+                            id: currentConversationUserRef.current.user.id,
+                            email: currentConversationUserRef.current.user
+                                .email,
+                            fullName:
+                                currentConversationUserRef.current.user
+                                    .fullName,
                         },
                         message: message,
                     },
                 ]);
+
+                /* if sender and receiver and page is open of sender so make message as read. */
+                if (
+                    receiver.userId === adminUser.id &&
+                    senderId === currentConversationUserRef.current.user.id
+                ) {
+                    const res = await fetch(
+                        `http://localhost:8000/api/messageReadUpdate/${conversationId}/${senderId}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+                    if (res.status === 200) {
+                        const result = await res.json();
+                        console.log(result);
+                    }
+                }
+                countUnreadMessages();
             }
         );
     }, [socket]);
+
+    useEffect(() => {
+        countUnreadMessages();
+    }, [adminUser, conversationsList]);
+
+    /* get unread messages number.  */
+    const countUnreadMessages = async () => {
+        if (conversationsList) {
+            console.log(
+                "conversationsList>>>>>>>",
+                conversationsListRef.current
+            );
+            // console.log("adminUser>>>>>>", adminUser);
+            setUnreadMessagesCount({});
+            for (let conversationUser of conversationsListRef.current) {
+                if (
+                    conversationUser.conversationId !== "" &&
+                    conversationUser.user.id !== ""
+                ) {
+                    const res = await fetch(
+                        `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${conversationUser.user.id}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+                    if (res.status === 200) {
+                        const result = await res.json();
+                        const tempMessageCount = {
+                            sender: conversationUser.user.id,
+                            unreadMessages: result.data.length,
+                        };
+                        setUnreadMessagesCount((prevData: any) => ({
+                            ...prevData,
+                            [conversationUser.user.id]: result.data.length,
+                        }));
+                    }
+                }
+            }
+        }
+    };
 
     const handleResizeScreenSize = () => {
         if (window.innerWidth < 640) {
@@ -157,10 +274,9 @@ const Dashboard = () => {
             setMenuSectionShowFlag(false);
             setConversationSectionShowFlag(true);
         }
-
         setCurrentConversationUser({ conversationId, user });
         const res = await fetch(
-            `http://localhost:8000/api/message/${conversationId}`,
+            `http://localhost:8000/api/message/${conversationId}/${user.id}`,
             {
                 method: "GET",
                 headers: {
@@ -170,6 +286,8 @@ const Dashboard = () => {
         );
         const result = await res.json();
         setMessages(result);
+        setHomePageForConversationListFlag(false);
+        countUnreadMessages();
     };
 
     /* set user details to state variable newUserDetails */
@@ -258,6 +376,7 @@ const Dashboard = () => {
                     workingData.receiverUser.fullName =
                         receiverUserData.fullName;
                 }
+                showListOfAllConversations();
                 fetchMessages(
                     workingData.conversationId,
                     workingData.receiverUser
@@ -269,6 +388,34 @@ const Dashboard = () => {
         }
     };
 
+    /* show list of all conversations. */
+    const showListOfAllConversations = async () => {
+        var loggedUserId = adminUser.id;
+        if (loggedUserId === "") {
+            const loggedInUser = JSON.parse(
+                localStorage.getItem("user:detail") || "null"
+            );
+            loggedUserId = (loggedInUser?.id as string) || "";
+        }
+        const res = await fetch(
+            `http://localhost:8000/api/conversations/${loggedUserId} `,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        const result = await res.json();
+        setConversationsList(result);
+        setShowUsersFlag(false);
+    };
+
+    useEffect(() => {
+        sethHomePageForUserListFlag(true);
+        setHomePageForConversationListFlag(true);
+    }, [showUsersFlag]);
+
     return (
         <div className="w-screen flex overflow-hidden">
             {/* I want to make dynamic width */}
@@ -276,10 +423,13 @@ const Dashboard = () => {
                 <div className="w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen bg-secondary">
                     <MenuSection
                         adminUser={adminUser}
+                        conversationsList={conversationsList}
                         fetchMessages={fetchMessages}
                         showUsersFlag={showUsersFlag}
                         setShowUsersFlag={setShowUsersFlag}
                         fetchUser={fetchUser}
+                        showListOfAllConversations={showListOfAllConversations}
+                        unreadMessagesCount={unreadMessagesCount}
                     />
                 </div>
             )}
@@ -294,6 +444,9 @@ const Dashboard = () => {
                         setMessages={setMessages}
                         newUserDetails={newUserDetails}
                         homePageForUserListFlag={homePageForUserListFlag}
+                        homePageForConversationListFlag={
+                            homePageForConversationListFlag
+                        }
                         startConversation={startConversation}
                         backToMenuOption={backToMenuOption}
                     />
