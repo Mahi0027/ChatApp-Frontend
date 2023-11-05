@@ -18,6 +18,7 @@ type ConversationListType = {
     setMessages: (arg0: any) => void;
     newUserDetails: any;
     homePageForUserListFlag: boolean;
+    homePageForConversationListFlag: boolean;
     startConversation: (arg0: string) => void;
     backToMenuOption: () => void;
 };
@@ -30,6 +31,7 @@ const ConversationsList = ({
     setMessages,
     newUserDetails,
     homePageForUserListFlag,
+    homePageForConversationListFlag,
     startConversation,
     backToMenuOption,
 }: ConversationListType) => {
@@ -160,123 +162,151 @@ const ConversationsList = ({
                 )
             ) : (
                 <>
-                    {/* current chat user name and status. */}
-                    {currentConversationUser?.user?.fullName && (
-                        <div className="w-4/5 sm:w-3/4 bg-secondary h-[80px] mt-14 mb-0.5 rounded-full flex items-center px-4 md:px-6">
-                            <div className="cursor-pointer">
-                                <Image
-                                    src={AvatarIcon}
-                                    alt={"AvatarIcon"}
-                                    width={50}
-                                    height={50}
-                                />
-                            </div>
-                            <div className="ml-2 mr-auto">
-                                <h3 className="text-lg">
-                                    {currentConversationUser?.user?.fullName}
-                                </h3>
-                                <p className="text-xs font-light text-gray-500">
-                                    {onlineFlag ? "Online" : ""}
-                                </p>
-                            </div>
-                            <div className="cursor-pointer">
-                                <Image
-                                    src={PhoneIcon}
-                                    width={30}
-                                    height={30}
-                                    alt={"phoneIcon"}
-                                />
-                            </div>
-                        </div>
-                    )}
+                    {!homePageForConversationListFlag ? (
+                        <>
+                            {/* current chat user name and status. */}
+                            {currentConversationUser?.user?.fullName && (
+                                <div className="w-4/5 sm:w-3/4 bg-secondary h-[80px] mt-14 mb-0.5 rounded-full flex items-center px-4 md:px-6">
+                                    <div className="cursor-pointer">
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-2 mr-auto">
+                                        <h3 className="text-lg">
+                                            {
+                                                currentConversationUser?.user
+                                                    ?.fullName
+                                            }
+                                        </h3>
+                                        <p className="text-xs font-light text-gray-500">
+                                            {onlineFlag ? "Online" : ""}
+                                        </p>
+                                    </div>
+                                    <div className="cursor-pointer">
+                                        <Image
+                                            src={PhoneIcon}
+                                            width={30}
+                                            height={30}
+                                            alt={"phoneIcon"}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
-                    {/* message box. */}
-                    {messages.length > 0 ? (
-                        <div
-                            className="h-3/4 w-full overflow-y-auto scroll-smooth"
-                            ref={containerRef}
-                        >
-                            <div className="p-2 sm:p-5 md:p-10">
-                                {messages.map(
-                                    (
+                            {/* message box. */}
+                            {messages.length > 0 ? (
+                                <div
+                                    className="h-3/4 w-full overflow-y-auto scroll-smooth"
+                                    ref={containerRef}
+                                >
+                                    <div className="p-2 sm:p-5 md:p-10">
+                                        {messages.map(
+                                            (
+                                                {
+                                                    message,
+                                                    user: { id },
+                                                }: {
+                                                    message: any;
+                                                    user: { id: any };
+                                                },
+                                                index: number
+                                            ) => {
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 mb-6 ${
+                                                            id === adminUser?.id
+                                                                ? "ml-auto items-end"
+                                                                : "items-start"
+                                                        }`}
+                                                    >
+                                                        <div
+                                                            className={`rounded-b-3xl p-4 ${
+                                                                id ===
+                                                                adminUser?.id
+                                                                    ? "bg-primary rounded-tl-3xl text-white"
+                                                                    : "bg-secondary rounded-tr-3xl"
+                                                            }`}
+                                                        >
+                                                            {message}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-3/4 w-full flex flex-col justify-center">
+                                    <div className="text-center text-lg font-semibold px-5">
+                                        No Messages yet. say <b>Hi</b> and start
+                                        conversation with{" "}
                                         {
-                                            message,
-                                            user: { id },
-                                        }: { message: any; user: { id: any } },
-                                        index: number
-                                    ) => {
-                                        return (
-                                            <div
-                                                key={index}
-                                                className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 mb-6 ${
-                                                    id === adminUser?.id
-                                                        ? "ml-auto items-end"
-                                                        : "items-start"
-                                                }`}
-                                            >
-                                                <div
-                                                    className={`rounded-b-3xl p-4 ${
-                                                        id === adminUser?.id
-                                                            ? "bg-primary rounded-tl-3xl text-white"
-                                                            : "bg-secondary rounded-tr-3xl"
-                                                    }`}
-                                                >
-                                                    {message}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                )}
-                            </div>
-                        </div>
+                                            currentConversationUser?.user
+                                                ?.fullName
+                                        }
+                                    </div>
+                                    <div className="text-center text-3xl mt-5">
+                                        {emoji}
+                                    </div>
+                                </div>
+                            )}
+                            {/* texting area. */}
+                            {currentConversationUser?.user?.fullName && (
+                                <div className="p-4 sm:p-6 md:p-8 w-full flex items-center">
+                                    <Input
+                                        placeholder="Type a message..."
+                                        className="w-full"
+                                        inputClassName="p-2 rounded-xl border-0 shadow-lg rounded-full bg-secondary focus:ring-0 focus:border-0 outline-none"
+                                        value={text}
+                                        onChange={(e) =>
+                                            setText(e.target.value)
+                                        }
+                                    />
+                                    <div
+                                        className={`ml-4 p-2 cursor-pointer bg-secondary rounded-full ${
+                                            !text && "pointer-events-none"
+                                        }`}
+                                        onClick={() => sendMessage()}
+                                    >
+                                        <Image
+                                            src={SendIcon}
+                                            width={30}
+                                            height={30}
+                                            alt={"SendIcon"}
+                                        />
+                                    </div>
+                                    <div
+                                        className={`ml-4 p-2 cursor-pointer bg-secondary rounded-full ${
+                                            !text && "pointer-events-none"
+                                        }`}
+                                    >
+                                        <Image
+                                            src={CirclePlusIcon}
+                                            width={30}
+                                            height={30}
+                                            alt={"CirclePlusIcon"}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="h-3/4 w-full flex flex-col justify-center">
-                            <div className="text-center text-lg font-semibold px-5">
-                                No Messages yet. say <b>Hi</b> and start
-                                conversation with{" "}
-                                {currentConversationUser?.user?.fullName}
+                        <>
+                            <div className="h-3/4 w-full flex flex-col justify-center">
+                                <div className="text-center text-lg font-semibold px-5">
+                                    No conversation started yet. Please choose
+                                    user, say <b>Hi</b> and start conversation.
+                                </div>
+                                <div className="text-center text-3xl mt-5">
+                                    {emoji}
+                                </div>
                             </div>
-                            <div className="text-center text-3xl mt-5">
-                                {emoji}
-                            </div>
-                        </div>
-                    )}
-                    {/* texting area. */}
-                    {currentConversationUser?.user?.fullName && (
-                        <div className="p-4 sm:p-6 md:p-8 w-full flex items-center">
-                            <Input
-                                placeholder="Type a message..."
-                                className="w-full"
-                                inputClassName="p-2 rounded-xl border-0 shadow-lg rounded-full bg-secondary focus:ring-0 focus:border-0 outline-none"
-                                value={text}
-                                onChange={(e) => setText(e.target.value)}
-                            />
-                            <div
-                                className={`ml-4 p-2 cursor-pointer bg-secondary rounded-full ${
-                                    !text && "pointer-events-none"
-                                }`}
-                                onClick={() => sendMessage()}
-                            >
-                                <Image
-                                    src={SendIcon}
-                                    width={30}
-                                    height={30}
-                                    alt={"SendIcon"}
-                                />
-                            </div>
-                            <div
-                                className={`ml-4 p-2 cursor-pointer bg-secondary rounded-full ${
-                                    !text && "pointer-events-none"
-                                }`}
-                            >
-                                <Image
-                                    src={CirclePlusIcon}
-                                    width={30}
-                                    height={30}
-                                    alt={"CirclePlusIcon"}
-                                />
-                            </div>
-                        </div>
+                        </>
                     )}
                 </>
             )}
