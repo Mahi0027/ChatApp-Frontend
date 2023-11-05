@@ -3,6 +3,7 @@ import Image from "next/image";
 import AvatarIcon from "@/public/assets/avatar.svg";
 import UsersIcon from "@/public/assets/users.svg";
 import MessagesIcon from "@/public/assets/messages.svg";
+import Input from "@/src/components/input";
 
 type ListOfAllUserType = {
     user: {
@@ -41,23 +42,51 @@ const MenuSection = ({
             },
         },
     ]);
+    const [searchedListOfAllUsers, setSearchedListOfAllUsers] =
+        useState<ListOfAllUserType>(listOfAllUsers);
+
+    const [searchedConversationsList, setSearchedConversationsList] =
+        useState<any>(conversationsList);
+
+    const [searchText, setSearchText] = useState<string>("");
 
     useEffect(() => {
         if (showUsersFlag) showListOfAllUser();
     }, []);
 
     useEffect(() => {
+        setSearchedListOfAllUsers(listOfAllUsers);
+    }, [listOfAllUsers]);
+
+    useEffect(() => {
         setChosenListOfItem(-1);
     }, [showUsersFlag]);
 
     const [chosenListOfItem, setChosenListOfItem] = useState(-1);
+
     useEffect(() => {
         console.log("listOfAllUsers", listOfAllUsers);
     }, [listOfAllUsers]);
 
+    // useEffect(() => {
+    //     console.log("conversationsList", conversationsList);
+    // }, [conversationsList]);
+
     useEffect(() => {
         console.log("conversationsList", conversationsList);
-    }, [conversationsList]);
+        const filterConversationsList = conversationsList.filter(
+            (conversation: any) =>
+                conversation.user.fullName
+                    .toLowerCase()
+                    .includes(searchText.toLowerCase())
+        );
+        setSearchedConversationsList(filterConversationsList);
+
+        const filterUsersList = listOfAllUsers.filter((user: any) =>
+            user.user.fullName.toLowerCase().includes(searchText.toLowerCase())
+        );
+        setSearchedListOfAllUsers(filterUsersList);
+    }, [searchText]);
 
     /* show list of all users */
     const showListOfAllUser = async () => {
@@ -92,7 +121,10 @@ const MenuSection = ({
                 {showUsersFlag ? (
                     <div
                         className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
-                        onClick={showListOfAllConversations}
+                        onClick={() => {
+                            showListOfAllConversations();
+                            setSearchText("");
+                        }}
                     >
                         <Image
                             src={MessagesIcon}
@@ -104,7 +136,10 @@ const MenuSection = ({
                 ) : (
                     <div
                         className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
-                        onClick={showListOfAllUser}
+                        onClick={() => {
+                            showListOfAllUser();
+                            setSearchText("");
+                        }}
                     >
                         <Image
                             src={UsersIcon}
@@ -118,14 +153,21 @@ const MenuSection = ({
             <hr />
 
             <div className="h-4/5 md:h-4/5 mx-2 mt-10">
-                <div className="text-primary text-lg">
+                <div className="text-primary text-lg mx-2">
                     {showUsersFlag ? "Users" : "Chats"}
                 </div>
+                <Input
+                    name="searchConversation"
+                    placeholder="Search or Start new chat"
+                    className="w-full my-2"
+                    value={searchText}
+                    onChange={(e: any) => setSearchText(e.target.value)}
+                />
                 <div className="h-full overflow-y-auto scroll-smooth pb-10">
                     {showUsersFlag ? (
                         <>
-                            {listOfAllUsers.length > 0 ? (
-                                listOfAllUsers.map(
+                            {searchedListOfAllUsers.length > 0 ? (
+                                searchedListOfAllUsers.map(
                                     ({ user }, index: number) => {
                                         if (user.id !== adminUser?.id) {
                                             return (
@@ -182,8 +224,8 @@ const MenuSection = ({
                         </>
                     ) : (
                         <>
-                            {conversationsList.length > 0 ? (
-                                conversationsList.map(
+                            {searchedConversationsList.length > 0 ? (
+                                searchedConversationsList.map(
                                     (
                                         {
                                             conversationId,
@@ -227,9 +269,9 @@ const MenuSection = ({
                                                         <h3 className="text-lg">
                                                             {user?.fullName}
                                                         </h3>
-                                                        <p className="text-sm font-light text-gray-500">
+                                                        {/* <p className="text-sm font-light text-gray-500">
                                                             {user?.email}
-                                                        </p>
+                                                        </p> */}
                                                     </div>
                                                     {unreadMessagesCount[
                                                         user?.id
