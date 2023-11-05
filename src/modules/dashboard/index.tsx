@@ -201,7 +201,6 @@ const Dashboard = () => {
                     );
                     if (res.status === 200) {
                         const result = await res.json();
-                        console.log(result);
                     }
                 }
                 countUnreadMessages();
@@ -216,11 +215,6 @@ const Dashboard = () => {
     /* get unread messages number.  */
     const countUnreadMessages = async () => {
         if (conversationsList) {
-            console.log(
-                "conversationsList>>>>>>>",
-                conversationsListRef.current
-            );
-            // console.log("adminUser>>>>>>", adminUser);
             setUnreadMessagesCount({});
             for (let conversationUser of conversationsListRef.current) {
                 if (

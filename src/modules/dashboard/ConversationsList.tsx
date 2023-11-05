@@ -58,7 +58,6 @@ const ConversationsList = ({
 
     useEffect(() => {
         var foundOnlineFlag = false;
-        console.log("activeUsers", activeUsers);
 
         for (let activeUser of activeUsers) {
             if (activeUser.userId === currentConversationUser.user.id) {

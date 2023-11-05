@@ -65,15 +65,6 @@ const MenuSection = ({
     const [chosenListOfItem, setChosenListOfItem] = useState(-1);
 
     useEffect(() => {
-        console.log("listOfAllUsers", listOfAllUsers);
-    }, [listOfAllUsers]);
-
-    // useEffect(() => {
-    //     console.log("conversationsList", conversationsList);
-    // }, [conversationsList]);
-
-    useEffect(() => {
-        console.log("conversationsList", conversationsList);
         const filterConversationsList = conversationsList.filter(
             (conversation: any) =>
                 conversation.user.fullName
