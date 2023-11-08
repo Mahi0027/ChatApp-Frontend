@@ -1,5 +1,6 @@
 import React, { createContext } from "react";
 
-const MyContext = createContext<any>({});
+export const primaryContext = createContext<any>({});
+export const dashboardContext = createContext<any>({});
 
-export default MyContext;
+// export default MyContext;

@@ -5,9 +5,10 @@ const Input = ({
     name = "",
     type = "text",
     className = "",
-    inputClassName="",
+    inputClassName = "",
     isRequired = false,
     placeholder = "",
+    isTextArea = false,
     value = "",
     onChange = (e: any) => {
         return;
@@ -24,11 +25,14 @@ const Input = ({
             <input
                 type={type}
                 id={name}
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${inputClassName}`}
+                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                    isTextArea ? "resize-y" : ""
+                } dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${inputClassName}`}
                 placeholder={placeholder}
                 required={isRequired}
                 value={value}
                 onChange={onChange}
+                style={isTextArea ? { height: "auto" } : {}}
             />
         </div>
     );

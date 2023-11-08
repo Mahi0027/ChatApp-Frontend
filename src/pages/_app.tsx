@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "@/src/styles/globals.css";
 import type { AppProps } from "next/app";
-import MyContext from "../context";
+import { primaryContext } from "@/src/context";
 import Notification from "../components/notification";
 
 type notificationDataType = {
@@ -21,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     const [activeUsers, setActiveUsers] = useState<any>([]);
     return (
-        <MyContext.Provider
+        <primaryContext.Provider
             value={{
                 notificationData,
                 setNotificationData,
@@ -36,6 +36,6 @@ export default function App({ Component, pageProps }: AppProps) {
                 show={notificationData.status}
             />
             <Component {...pageProps} />
-        </MyContext.Provider>
+        </primaryContext.Provider>
     );
 }

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import AvatarIcon from "@/public/assets/avatar.svg";
 import UsersIcon from "@/public/assets/users.svg";
 import MessagesIcon from "@/public/assets/messages.svg";
 import Input from "@/src/components/input";
+import { dashboardContext } from "@/src/context";
 
 type ListOfAllUserType = {
     user: {
@@ -17,22 +18,23 @@ type MenuSectionType = {
     adminUser: any;
     conversationsList: any;
     fetchMessages: (arg0: string, arg1: any) => void;
-    showUsersFlag: boolean;
-    setShowUsersFlag: (arg0: boolean) => void;
     fetchUser: (arg0: string, arg1: any) => void;
     showListOfAllConversations: () => void;
     unreadMessagesCount: any;
+    goToConversationSection: () => void;
 };
 const MenuSection = ({
     adminUser,
     conversationsList,
     fetchMessages,
-    showUsersFlag,
-    setShowUsersFlag,
     fetchUser,
     showListOfAllConversations,
     unreadMessagesCount,
+    goToConversationSection,
 }: MenuSectionType) => {
+    const { dashboardType, setDashboardType, settingPage, setSettingPage } =
+        useContext(dashboardContext);
+
     const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
         {
             user: {
@@ -51,7 +53,7 @@ const MenuSection = ({
     const [searchText, setSearchText] = useState<string>("");
 
     useEffect(() => {
-        if (showUsersFlag) showListOfAllUser();
+        if (dashboardType.user) showListOfAllUser();
     }, []);
 
     useEffect(() => {
@@ -60,7 +62,11 @@ const MenuSection = ({
 
     useEffect(() => {
         setChosenListOfItem(-1);
-    }, [showUsersFlag]);
+    }, [dashboardType]);
+
+    useEffect(() => {
+        setSearchedConversationsList(conversationsList);
+    }, [conversationsList]);
 
     const [chosenListOfItem, setChosenListOfItem] = useState(-1);
 
@@ -89,73 +95,133 @@ const MenuSection = ({
         });
         const result = await res.json();
         setListOfAllUsers(result);
-        setShowUsersFlag(true);
+        // setShowUsersFlag(true);
+        setDashboardType((prevState: any) => ({
+            ...prevState,
+            chat: false,
+            user: true,
+        }));
     };
 
+    const toggleSettingPage = () => {
+        if (dashboardType.setting) {
+            setDashboardType((prevState: any) => ({
+                ...prevState,
+                chat: true,
+                user: false,
+                setting: false,
+            }));
+        } else {
+            setSettingPage({
+                profile: true,
+                general: false,
+                chats: false,
+                help: false,
+                logout: false,
+            });
+            setDashboardType((prevState: any) => ({
+                ...prevState,
+                chat: false,
+                user: false,
+                setting: true,
+            }));
+        }
+    };
+
+    const handleSettingPage = (page: string) => {
+        setSettingPage({
+            profile: page === "profile" ? true : false,
+            general: page === "general" ? true : false,
+            chats: page === "chats" ? true : false,
+            help: page === "help" ? true : false,
+            logout: page === "logout" ? true : false,
+        });
+    };
     return (
         <>
             <div className="flex items-center my-8 mx-2">
-                <div className="border border-primary p-[2px] rounded-full">
-                    <Image
-                        src={AvatarIcon}
-                        width={50}
-                        height={50}
-                        alt={"AvatarIcon"}
-                    />
-                </div>
-                <div className="ml-4">
-                    <h3 className="text-2xl">
-                        {adminUser.fullName ? adminUser.fullName : ""}
-                    </h3>
-                    <p className="text-lg font-light">My Account</p>
-                </div>
-                {showUsersFlag ? (
-                    <div
-                        className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
-                        onClick={() => {
-                            showListOfAllConversations();
-                            setSearchText("");
-                        }}
-                    >
+                <div
+                    className="flex items-center cursor-pointer"
+                    onClick={toggleSettingPage}
+                >
+                    <div className="border border-primary p-[2px] rounded-full">
                         <Image
-                            src={MessagesIcon}
-                            width={30}
-                            height={30}
-                            alt={"messageIcon"}
+                            src={AvatarIcon}
+                            width={50}
+                            height={50}
+                            alt={"AvatarIcon"}
                         />
                     </div>
-                ) : (
-                    <div
-                        className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
-                        onClick={() => {
-                            showListOfAllUser();
-                            setSearchText("");
-                        }}
-                    >
-                        <Image
-                            src={UsersIcon}
-                            width={30}
-                            height={30}
-                            alt={"UsersIcon"}
-                        />
+                    <div className="ml-4">
+                        <h3 className="text-2xl">
+                            {adminUser.fullName ? adminUser.fullName : ""}
+                        </h3>
+                        <p className="text-lg font-light">My Account</p>
                     </div>
-                )}
+                </div>
+                {!dashboardType.setting &&
+                    (dashboardType.user ? (
+                        <div
+                            className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
+                            onClick={() => {
+                                setDashboardType({
+                                    chat: true,
+                                    user: false,
+                                    setting: false,
+                                });
+                                showListOfAllConversations();
+                                setSearchText("");
+                            }}
+                        >
+                            <Image
+                                src={MessagesIcon}
+                                width={30}
+                                height={30}
+                                alt={"messageIcon"}
+                            />
+                        </div>
+                    ) : (
+                        <div
+                            className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
+                            onClick={() => {
+                                setDashboardType({
+                                    chat: false,
+                                    user: true,
+                                    setting: false,
+                                });
+                                showListOfAllUser();
+                                setSearchText("");
+                            }}
+                        >
+                            <Image
+                                src={UsersIcon}
+                                width={30}
+                                height={30}
+                                alt={"UsersIcon"}
+                            />
+                        </div>
+                    ))}
             </div>
             <hr />
 
             <div className="h-4/5 md:h-4/5 mx-2 mt-10">
                 <div className="text-primary text-lg mx-2">
-                    {showUsersFlag ? "Users" : "Chats"}
+                    {dashboardType.user && "Users"}
+                    {dashboardType.chat && "Chats"}
+                    {dashboardType.setting && "Settings"}
                 </div>
-                <Input
-                    name="searchConversation"
-                    placeholder="Search or Start new chat"
-                    className="w-full my-2"
-                    value={searchText}
-                    onChange={(e: any) => setSearchText(e.target.value)}
-                />
+                {!dashboardType.setting && (
+                    <Input
+                        name="searchConversation"
+                        placeholder="Search or Start new chat"
+                        className="w-full my-2"
+                        value={searchText}
+                        onChange={(e: any) => setSearchText(e.target.value)}
+                    />
+                )}
                 <div className="h-full overflow-y-auto scroll-smooth pb-10">
-                    {showUsersFlag ? (
+                    {/* all users list. */}
+                    {dashboardType.user && (
                         <>
                             {searchedListOfAllUsers.length > 0 ? (
                                 searchedListOfAllUsers.map(
@@ -213,7 +279,9 @@ const MenuSection = ({
                                 </div>
                             )}
                         </>
-                    ) : (
+                    )}
+                    {/* all conversations list. */}
+                    {dashboardType.chat && (
                         <>
                             {searchedConversationsList.length > 0 ? (
                                 searchedConversationsList.map(
@@ -285,6 +353,144 @@ const MenuSection = ({
                                     No Conversations
                                 </div>
                             )}
+                        </>
+                    )}
+
+                    {/* all settings list. */}
+                    {dashboardType.setting && (
+                        <>
+                            <div
+                                className={`py-6 border-b border-b-gray-300 ${
+                                    settingPage.profile &&
+                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                }`}
+                            >
+                                <div
+                                    className="cursor-pointer flex items-center"
+                                    onClick={() => {
+                                        handleSettingPage("profile");
+                                        goToConversationSection();
+                                    }}
+                                >
+                                    <div>
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">
+                                            Your Profile
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className={`py-6 border-b border-b-gray-300 ${
+                                    settingPage.general &&
+                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                }`}
+                            >
+                                <div
+                                    className="cursor-pointer flex items-center"
+                                    onClick={() => {
+                                        handleSettingPage("general");
+                                        goToConversationSection();
+                                    }}
+                                >
+                                    <div>
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">General</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className={`py-6 border-b border-b-gray-300 ${
+                                    settingPage.chats &&
+                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                }`}
+                            >
+                                <div
+                                    className="cursor-pointer flex items-center"
+                                    onClick={() => {
+                                        handleSettingPage("chats");
+                                        goToConversationSection();
+                                    }}
+                                >
+                                    <div>
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">Chats</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className={`py-6 border-b border-b-gray-300 ${
+                                    settingPage.help &&
+                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                }`}
+                            >
+                                <div
+                                    className="cursor-pointer flex items-center"
+                                    onClick={() => {
+                                        handleSettingPage("help");
+                                        goToConversationSection();
+                                    }}
+                                >
+                                    <div>
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">Help</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className={`py-6 border-b border-b-gray-300 ${
+                                    settingPage.logout &&
+                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                }`}
+                            >
+                                <div
+                                    className="cursor-pointer flex items-center"
+                                    onClick={() => {
+                                        handleSettingPage("logout");
+                                        goToConversationSection();
+                                    }}
+                                >
+                                    <div>
+                                        <Image
+                                            src={AvatarIcon}
+                                            alt={"AvatarIcon"}
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">Log Out</h3>
+                                    </div>
+                                </div>
+                            </div>
                         </>
                     )}
                 </div>

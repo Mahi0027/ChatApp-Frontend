@@ -3,10 +3,10 @@ import Input from "@/src/components/input";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
-import context from "@/src/context";
+import { primaryContext } from "@/src/context";
 
 function Form({ isSignInPage = true }) {
-    const { setNotificationData } = useContext(context);
+    const { setNotificationData } = useContext(primaryContext);
     const [data, setData] = useState({
         ...(!isSignInPage && {
             fullName: "",
@@ -15,7 +15,7 @@ function Form({ isSignInPage = true }) {
         password: "",
     });
     const router = useRouter();
-    
+
     /* on submit form for signIn/signUp */
     const handleSubmit = async (e: any) => {
         e.preventDefault();
