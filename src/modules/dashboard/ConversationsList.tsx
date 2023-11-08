@@ -7,12 +7,13 @@ import SendIcon from "@/public/assets/send.svg";
 import CirclePlusIcon from "@/public/assets/circlePlus.svg";
 import Button from "@/src/components/button";
 import emojis from "@/public/assets/emojis.json";
-import context from "@/src/context";
+import user from "@/public/assets/user/profile.jpg"; /* It's is for temporary purpose. */
+import edit from "@/public/assets/edit.svg";
+import { dashboardContext, primaryContext } from "@/src/context";
 
 type ConversationListType = {
     adminUser: any;
     socket: any;
-    showUsersFlag: boolean;
     currentConversationUser: any;
     messages: any;
     setMessages: (arg0: any) => void;
@@ -25,7 +26,6 @@ type ConversationListType = {
 const ConversationsList = ({
     adminUser,
     socket,
-    showUsersFlag,
     currentConversationUser,
     messages,
     setMessages,
@@ -35,12 +35,14 @@ const ConversationsList = ({
     startConversation,
     backToMenuOption,
 }: ConversationListType) => {
-    const { activeUsers } = useContext(context);
+    const { activeUsers } = useContext(primaryContext);
+    const { dashboardType, settingPage } = useContext(dashboardContext);
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
     const [onlineFlag, setOnlineFlag] = useState<boolean>(false);
     const containerRef = useRef<any>(null);
+    const fileInputRef = useRef<any>(null);
 
     useEffect(() => {
         setEmoji(emojis[Math.floor(Math.random() * 320)]);
@@ -110,6 +112,15 @@ const ConversationsList = ({
             console.log("invalid inputs");
         }
     };
+
+    const handleEditClick = () => {
+        fileInputRef.current.click(); // Trigger the file input
+    };
+    const handleFileInputChange = (event: any) => {
+        const selectedFile = event.target.files[0]; // Get the selected file
+        // Process the selected file as needed
+        console.log("selectedFile,selectedFile");
+    };
     return (
         <>
             {showBackOption && (
@@ -120,8 +131,9 @@ const ConversationsList = ({
                     &#8592;
                 </div>
             )}
-            {showUsersFlag ? (
-                homePageForUserListFlag ? (
+            {/* user related content board. */}
+            {dashboardType.user &&
+                (homePageForUserListFlag ? (
                     <div className="h-3/4 w-full flex flex-col justify-center">
                         <div className="text-center text-lg font-semibold px-5">
                             No conversation selected yet. Please choose user and
@@ -158,8 +170,10 @@ const ConversationsList = ({
                             />
                         </div>
                     </div>
-                )
-            ) : (
+                ))}
+
+            {/* conversation related content board. */}
+            {dashboardType.chat && (
                 <>
                     {!homePageForConversationListFlag ? (
                         <>
@@ -308,6 +322,136 @@ const ConversationsList = ({
                         </>
                     )}
                 </>
+            )}
+
+            {/* setting related content board. */}
+            {dashboardType.setting && (
+                <div className="h-full w-full md:w-4/5 lg:w-3/5 flex flex-col justify-center items-center text-center text-lg font-semibold px-5">
+                    {settingPage.profile && (
+                        <>
+                            <form className="w-full max-h-[80%] bg-secondary mt-14 mb-0.5 rounded-lg overflow-y-auto shadow-lg">
+                                <div className="relative w-full h-96 flex justify-center group hover:opacity-50 transition-opacity delay-100">
+                                    <Image
+                                        className="object-cover hover:scale-110 transition-all"
+                                        src={user}
+                                        alt={"AvatarIcon"}
+                                    />
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        style={{ display: "none" }}
+                                        onChange={handleFileInputChange}
+                                    />
+                                    <div className="absolute top-[48%] left-[48%] flex justify-center items-center">
+
+                                    <Image
+                                        className="hidden h-8 w-8 font-bold text-5xl cursor-pointer z-100 hover:opacity-100 group-hover:scale-125 group-hover:block opacity-100 transition-all"
+                                        src={edit}
+                                        alt="edit"
+                                        onClick={handleEditClick}
+                                    />
+                                    </div>
+                                </div>
+                                <hr className="my-5" />
+                                <div className="flex flex-col md:flex-row  mb-2">
+                                    <div className="w-full flex justify-center">
+                                        <Input
+                                            label="First name"
+                                            name="firstName"
+                                            placeholder="Enter your first name"
+                                            isRequired={true}
+                                            value=""
+                                            onChange={(e: any) => {}}
+                                        />
+                                    </div>
+                                    <div className="w-full flex justify-center">
+                                        <Input
+                                            label="Last name"
+                                            name="lastName"
+                                            placeholder="Enter your last name"
+                                            isRequired={true}
+                                            value=""
+                                            onChange={(e: any) => {}}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col md:flex-row  mb-2">
+                                    <div className="w-full flex justify-center">
+                                        <Input
+                                            label="Nick name"
+                                            name="nickName"
+                                            placeholder="Enter your nick name"
+                                            isRequired={true}
+                                            value=""
+                                            onChange={(e: any) => {}}
+                                        />
+                                    </div>
+                                    <div className="w-full flex justify-center">
+                                        <Input
+                                            label="Email"
+                                            name="email"
+                                            type="email"
+                                            placeholder="Enter your email"
+                                            isRequired={true}
+                                            value=""
+                                            onChange={(e: any) => {}}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="w-full flex justify-center">
+                                    <Input
+                                        label="Status"
+                                        name="status"
+                                        placeholder="What is current status"
+                                        isRequired={true}
+                                        isTextArea={true}
+                                        value=""
+                                        onChange={(e: any) => {
+                                            setText(e.target.value);
+                                        }}
+                                    />
+                                </div>
+                                <hr className="my-5" />
+                                <div className="flex flex-col md:flex-row mb-5">
+                                    <div className="w-full flex justify-center my-2 md:my-0">
+                                        <Button
+                                            label="Reset"
+                                            type="button"
+                                            className="w-full mx-2 text-black bg-gray-200 hover:text-white hover:bg-gray-400"
+                                        />
+                                    </div>
+                                    <div className="w-full flex justify-center my-2 md:my-0">
+                                        <Button
+                                            label="Reset"
+                                            type="submit"
+                                            className="w-full mx-2 text-black bg-green-400 hover:text-white hover:bg-green-400"
+                                        />
+                                    </div>
+                                </div>
+                            </form>
+                        </>
+                    )}
+                    {settingPage.general && (
+                        <>
+                            <p>This is general setting page</p>
+                        </>
+                    )}
+                    {settingPage.chats && (
+                        <>
+                            <p>This is chats setting page</p>
+                        </>
+                    )}
+                    {settingPage.help && (
+                        <>
+                            <p>This is help setting page</p>
+                        </>
+                    )}
+                    {settingPage.logout && (
+                        <>
+                            <p>This is logout setting page</p>
+                        </>
+                    )}
+                </div>
             )}
         </>
     );

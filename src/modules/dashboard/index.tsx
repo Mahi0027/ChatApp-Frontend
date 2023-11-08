@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
 import { io } from "socket.io-client";
-import context from "@/src/context";
+import { dashboardContext, primaryContext } from "@/src/context";
 
 type adminUserType = {
     id: string;
@@ -19,13 +19,6 @@ type CurrentConversationUserType = {
     };
 };
 
-type ListOfAllConversationType = {
-    conversationId: string;
-    user: {
-        email: string;
-        fullName: string;
-    };
-}[];
 type NewUserDetailsType = {
     userId: string;
     user: {
@@ -43,15 +36,24 @@ type ConversationsListType = {
     };
 }[];
 
-type UnreadMessagesCountType = {
-    conversationUserId: string;
-    messagesCount: number;
-}[];
-
 const Dashboard = () => {
     const [socket, setSocket] = useState<any | null>(null);
-    const { setActiveUsers } =
-        useContext(context); /* to get details of online users. */
+    const { setActiveUsers } = useContext(primaryContext);
+
+    const { dashboardType, setDashboardType } =
+        useContext(
+            dashboardContext
+        ); /* it's for show/hide user/message icon. */
+    const [homePageForUserListFlag, setHomePageForUserListFlag] =
+        useState<boolean>(true); /* home page for user list content side */
+    const [
+        homePageForConversationListFlag,
+        setHomePageForConversationListFlag,
+    ] =
+        useState<boolean>(
+            true
+        ); /* home page for conversation list content side */
+
     const [adminUser, setAdminUser] = useState<adminUserType>({
         id: "",
         email: "",
@@ -61,16 +63,6 @@ const Dashboard = () => {
         useState<boolean>(true); /* flag to show/hide menu section. */
     const [conversationSectionShowFlag, setConversationSectionShowFlag] =
         useState<boolean>(false); /* flag to show/hide conversation section. */
-    // const [conversations, setConversations] =
-    //     useState<ListOfAllConversationType>([
-    //         {
-    //             conversationId: "",
-    //             user: {
-    //                 email: "",
-    //                 fullName: "",
-    //             },
-    //         },
-    //     ]);
     const [messages, setMessages] = useState<any>(
         []
     ); /* store current selected user's all message. */
@@ -83,8 +75,6 @@ const Dashboard = () => {
     const currentConversationUserRef = useRef<CurrentConversationUserType>(
         currentConversationUser
     ); /* store current user details with whom admin user is talking in ref for using in socket. */
-    const [showUsersFlag, setShowUsersFlag] =
-        useState<boolean>(false); /* it's for show/hide user/message icon. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
         user: {
@@ -92,13 +82,6 @@ const Dashboard = () => {
             fullName: "",
         },
     });
-    const [homePageForUserListFlag, sethHomePageForUserListFlag] =
-        useState<boolean>(true);
-    const [
-        homePageForConversationListFlag,
-        setHomePageForConversationListFlag,
-    ] = useState<boolean>(true);
-
     const [conversationsList, setConversationsList] =
         useState<ConversationsListType>([
             {
@@ -212,6 +195,11 @@ const Dashboard = () => {
         countUnreadMessages();
     }, [adminUser, conversationsList]);
 
+    useEffect(() => {
+        setHomePageForUserListFlag(true);
+        setHomePageForConversationListFlag(true);
+    }, [dashboardType]);
+
     /* get unread messages number.  */
     const countUnreadMessages = async () => {
         if (conversationsList) {
@@ -232,10 +220,6 @@ const Dashboard = () => {
                     );
                     if (res.status === 200) {
                         const result = await res.json();
-                        const tempMessageCount = {
-                            sender: conversationUser.user.id,
-                            unreadMessages: result.data.length,
-                        };
                         setUnreadMessagesCount((prevData: any) => ({
                             ...prevData,
                             [conversationUser.user.id]: result.data.length,
@@ -262,12 +246,17 @@ const Dashboard = () => {
         setConversationSectionShowFlag(false);
     };
 
-    /* fetching messages. */
-    const fetchMessages = async (conversationId: string, user: any) => {
+    /* specially this function for mobile device. In this user can come on menu option and it work only if screen width size is smaller than 640px. */
+    const goToConversationSection = () => {
         if (window.innerWidth < 640) {
             setMenuSectionShowFlag(false);
             setConversationSectionShowFlag(true);
         }
+    };
+
+    /* fetching messages. */
+    const fetchMessages = async (conversationId: string, user: any) => {
+        goToConversationSection;
         setCurrentConversationUser({ conversationId, user });
         const res = await fetch(
             `http://localhost:8000/api/message/${conversationId}/${user.id}`,
@@ -287,11 +276,8 @@ const Dashboard = () => {
     /* set user details to state variable newUserDetails */
     const fetchUser = async (userId: string, user: any) => {
         setNewUserDetails({ userId, user });
-        sethHomePageForUserListFlag(false);
-        if (window.innerWidth < 640) {
-            setMenuSectionShowFlag(false);
-            setConversationSectionShowFlag(true);
-        }
+        setHomePageForUserListFlag(false);
+        goToConversationSection();
     };
 
     /* create conversation. */
@@ -375,7 +361,11 @@ const Dashboard = () => {
                     workingData.conversationId,
                     workingData.receiverUser
                 );
-                setShowUsersFlag(false);
+                setDashboardType((prevState: any) => ({
+                    ...prevState,
+                    chat: true,
+                    user: false,
+                }));
             }
         } catch (error) {
             console.log("Something went wrong: ", error);
@@ -402,13 +392,12 @@ const Dashboard = () => {
         );
         const result = await res.json();
         setConversationsList(result);
-        setShowUsersFlag(false);
+        setDashboardType((prevState: any) => ({
+            ...prevState,
+            chat: true,
+            user: false,
+        }));
     };
-
-    useEffect(() => {
-        sethHomePageForUserListFlag(true);
-        setHomePageForConversationListFlag(true);
-    }, [showUsersFlag]);
 
     return (
         <div className="w-screen flex overflow-hidden">
@@ -419,11 +408,10 @@ const Dashboard = () => {
                         adminUser={adminUser}
                         conversationsList={conversationsList}
                         fetchMessages={fetchMessages}
-                        showUsersFlag={showUsersFlag}
-                        setShowUsersFlag={setShowUsersFlag}
                         fetchUser={fetchUser}
                         showListOfAllConversations={showListOfAllConversations}
                         unreadMessagesCount={unreadMessagesCount}
+                        goToConversationSection={goToConversationSection}
                     />
                 </div>
             )}
@@ -432,7 +420,6 @@ const Dashboard = () => {
                     <ConversationsList
                         adminUser={adminUser}
                         socket={socket}
-                        showUsersFlag={showUsersFlag}
                         currentConversationUser={currentConversationUser}
                         messages={messages}
                         setMessages={setMessages}

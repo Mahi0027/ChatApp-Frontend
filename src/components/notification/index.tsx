@@ -11,7 +11,7 @@ import Warning from "@/public/assets/notifications/warning.svg";
 import Error from "@/public/assets/notifications/error.svg";
 import Close from "@/public/assets/notifications/close.svg";
 import Image from "next/image";
-import context from "@/src/context";
+import { primaryContext } from "@/src/context";
 
 const Notification = ({
     type = "info",
@@ -19,7 +19,7 @@ const Notification = ({
     message = "",
     show = false,
 }) => {
-    const { setNotificationData } = useContext(context);
+    const { setNotificationData } = useContext(primaryContext);
 
     const [showFlag, setShowFlag] = useState<boolean>(show);
     const [icon, setIcon] = useState<any>(null);
