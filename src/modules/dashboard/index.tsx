@@ -206,8 +206,8 @@ const Dashboard = () => {
             setUnreadMessagesCount({});
             for (let conversationUser of conversationsListRef.current) {
                 if (
-                    conversationUser.conversationId !== "" &&
-                    conversationUser.user.id !== ""
+                    conversationUser?.conversationId !== "" &&
+                    conversationUser?.user?.id !== ""
                 ) {
                     const res = await fetch(
                         `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${conversationUser.user.id}`,

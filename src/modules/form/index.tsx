@@ -40,15 +40,14 @@ function Form({ isSignInPage = true }) {
                 );
                 router.push("/");
             }
-        } else {
-            setNotificationData((prevData: any) => ({
-                ...prevData,
-                type: result.type,
-                heading: result.heading,
-                message: result.message,
-                status: true,
-            }));
         }
+        setNotificationData((prevData: any) => ({
+            ...prevData,
+            type: result.type,
+            heading: result.heading,
+            message: result.message,
+            status: true,
+        }));
     };
 
     return (
@@ -114,7 +113,7 @@ function Form({ isSignInPage = true }) {
                     <Button
                         label={isSignInPage ? "Sign in" : "Sign up"}
                         type="submit"
-                        className="w-5/6 sm:w-2/3 md:w-1/2 mb-2"
+                        className="w-5/6 sm:w-2/3 md:w-1/2 mb-2 bg-primary hover:bg-primary"
                     />
                 </form>
                 {/* form section end */}
