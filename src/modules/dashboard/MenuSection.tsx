@@ -6,6 +6,7 @@ import MessagesIcon from "@/public/assets/messages.svg";
 import Input from "@/src/components/input";
 import { dashboardContext } from "@/src/context";
 
+/* define type of status start. */
 type ListOfAllUserType = {
     user: {
         id: string;
@@ -15,7 +16,6 @@ type ListOfAllUserType = {
 }[];
 
 type MenuSectionType = {
-    adminUser: any;
     conversationsList: any;
     fetchMessages: (arg0: string, arg1: any) => void;
     fetchUser: (arg0: string, arg1: any) => void;
@@ -23,8 +23,9 @@ type MenuSectionType = {
     unreadMessagesCount: any;
     goToConversationSection: () => void;
 };
+/* define type of status end. */
+
 const MenuSection = ({
-    adminUser,
     conversationsList,
     fetchMessages,
     fetchUser,
@@ -32,9 +33,17 @@ const MenuSection = ({
     unreadMessagesCount,
     goToConversationSection,
 }: MenuSectionType) => {
-    const { dashboardType, setDashboardType, settingPage, setSettingPage } =
-        useContext(dashboardContext);
+    /* context declaration start. */
+    const {
+        dashboardType,
+        setDashboardType,
+        settingPage,
+        setSettingPage,
+        adminUser,
+    } = useContext(dashboardContext);
+    /* context declaration end. */
 
+    /* state variable declaration start. */
     const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
         {
             user: {
@@ -46,14 +55,18 @@ const MenuSection = ({
     ]);
     const [searchedListOfAllUsers, setSearchedListOfAllUsers] =
         useState<ListOfAllUserType>(listOfAllUsers);
-
     const [searchedConversationsList, setSearchedConversationsList] =
         useState<any>(conversationsList);
-
     const [searchText, setSearchText] = useState<string>("");
+    const [chosenListOfItem, setChosenListOfItem] = useState(-1);
+    /* state variable declaration end. */
 
+    /* useEffect functions start. */
     useEffect(() => {
+        console.log("adminUser", adminUser);
+        
         if (dashboardType.user) showListOfAllUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -68,8 +81,6 @@ const MenuSection = ({
         setSearchedConversationsList(conversationsList);
     }, [conversationsList]);
 
-    const [chosenListOfItem, setChosenListOfItem] = useState(-1);
-
     useEffect(() => {
         const filterConversationsList = conversationsList.filter(
             (conversation: any) =>
@@ -83,7 +94,9 @@ const MenuSection = ({
             user.user.fullName.toLowerCase().includes(searchText.toLowerCase())
         );
         setSearchedListOfAllUsers(filterUsersList);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchText]);
+    /* useEffect functions end. */
 
     /* show list of all users */
     const showListOfAllUser = async () => {
@@ -113,7 +126,7 @@ const MenuSection = ({
             }));
         } else {
             setSettingPage({
-                profile: true,
+                profile: false,
                 general: false,
                 chats: false,
                 help: false,
@@ -144,9 +157,14 @@ const MenuSection = ({
                     className="flex items-center cursor-pointer"
                     onClick={toggleSettingPage}
                 >
-                    <div className="border border-primary p-[2px] rounded-full">
+                    <div>
                         <Image
-                            src={AvatarIcon}
+                            className="object-cover w-16 h-16 rounded-full"
+                            src={
+                                adminUser.profileImage
+                                    ? adminUser.profileImage
+                                    : AvatarIcon
+                            }
                             width={50}
                             height={50}
                             alt={"AvatarIcon"}
@@ -154,9 +172,12 @@ const MenuSection = ({
                     </div>
                     <div className="ml-4">
                         <h3 className="text-2xl">
-                            {adminUser.fullName ? adminUser.fullName : ""}
+                            {adminUser.firstName ? adminUser.firstName : ""}{" "}
+                            {adminUser.lastName ? adminUser.lastName : ""}
                         </h3>
-                        <p className="text-lg font-light">My Account</p>
+                        <p className="text-lg font-light">
+                            {adminUser.status ? adminUser.status : ""}
+                        </p>
                     </div>
                 </div>
                 {!dashboardType.setting &&
