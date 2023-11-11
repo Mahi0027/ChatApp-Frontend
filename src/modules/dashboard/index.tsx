@@ -4,12 +4,7 @@ import ConversationsList from "./ConversationsList";
 import { io } from "socket.io-client";
 import { dashboardContext, primaryContext } from "@/src/context";
 
-type adminUserType = {
-    id: string;
-    email: string;
-    fullName: string;
-};
-
+/* define type of status start. */
 type CurrentConversationUserType = {
     conversationId: string;
     user: {
@@ -35,15 +30,19 @@ type ConversationsListType = {
         fullName: string;
     };
 }[];
+/* define type of status end. */
 
 const Dashboard = () => {
-    const [socket, setSocket] = useState<any | null>(null);
+    /* context declaration start. */
     const { setActiveUsers } = useContext(primaryContext);
-
-    const { dashboardType, setDashboardType } =
+    const { dashboardType, setDashboardType, adminUser, setAdminUser } =
         useContext(
             dashboardContext
         ); /* it's for show/hide user/message icon. */
+    /* context declaration end. */
+
+    /* state variable declaration start. */
+    const [socket, setSocket] = useState<any | null>(null);
     const [homePageForUserListFlag, setHomePageForUserListFlag] =
         useState<boolean>(true); /* home page for user list content side */
     const [
@@ -53,12 +52,6 @@ const Dashboard = () => {
         useState<boolean>(
             true
         ); /* home page for conversation list content side */
-
-    const [adminUser, setAdminUser] = useState<adminUserType>({
-        id: "",
-        email: "",
-        fullName: "",
-    }); /* admin user */
     const [menuSectionShowFlag, setMenuSectionShowFlag] =
         useState<boolean>(true); /* flag to show/hide menu section. */
     const [conversationSectionShowFlag, setConversationSectionShowFlag] =
@@ -72,9 +65,6 @@ const Dashboard = () => {
             conversationId: "",
             user: { id: "", email: "", fullName: "" },
         }); /* store current user details with whom admin user is talking. */
-    const currentConversationUserRef = useRef<CurrentConversationUserType>(
-        currentConversationUser
-    ); /* store current user details with whom admin user is talking in ref for using in socket. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
         user: {
@@ -93,22 +83,48 @@ const Dashboard = () => {
                 },
             },
         ]);
+    /* state variable declaration end. */
+
+    /* ref hook variable declaration start. */
     const conversationsListRef =
         useRef<ConversationsListType>(conversationsList);
+    const currentConversationUserRef = useRef<CurrentConversationUserType>(
+        currentConversationUser
+    ); /* store current user details with whom admin user is talking in ref for using in socket. */
+    /* ref hook variable declaration end. */
 
+    /* useEffect functions start. */
     useEffect(() => {
         /* create socket user */
         setSocket(io("http://localhost:8080"));
-
-        setAdminUser(
-            typeof localStorage !== "undefined"
-                ? JSON.parse(localStorage.getItem("user:detail") || "null") ?? {
-                      id: "",
-                      email: "",
-                      fullName: "",
-                  }
-                : { id: "", email: "", fullName: "" }
+        const localStorageAdminDetail = JSON.parse(
+            localStorage.getItem("user:detail") || "null"
         );
+        console.log("localStorageAdminDetail", localStorageAdminDetail);
+        const fetchData = async () => {
+            if (localStorageAdminDetail.id) {
+                try {
+                    const adminUserDetails = await getAdminUserDetail(
+                        localStorageAdminDetail.id
+                    );
+                    console.log("adminUserDetails", adminUserDetails);
+                    if (setAdminUser) {
+                        setAdminUser({
+                            id: adminUserDetails._id,
+                            email: adminUserDetails.email,
+                            firstName: adminUserDetails.firstName,
+                            lastName: adminUserDetails.lastName,
+                            nickName: adminUserDetails.nickName,
+                            profileImage: adminUserDetails.profileImage,
+                            status: adminUserDetails.status,
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching admin user details:", error);
+                }
+            }
+        };
+        fetchData();
 
         showListOfAllConversations();
 
@@ -125,6 +141,7 @@ const Dashboard = () => {
         return () => {
             window.removeEventListener("resize", handleResizeScreenSize);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -189,16 +206,19 @@ const Dashboard = () => {
                 countUnreadMessages();
             }
         );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socket]);
 
     useEffect(() => {
         countUnreadMessages();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [adminUser, conversationsList]);
 
     useEffect(() => {
         setHomePageForUserListFlag(true);
         setHomePageForConversationListFlag(true);
     }, [dashboardType]);
+    /* useEffect functions end. */
 
     /* get unread messages number.  */
     const countUnreadMessages = async () => {
@@ -206,8 +226,8 @@ const Dashboard = () => {
             setUnreadMessagesCount({});
             for (let conversationUser of conversationsListRef.current) {
                 if (
-                    conversationUser?.conversationId !== "" &&
-                    conversationUser?.user?.id !== ""
+                    conversationUser.conversationId &&
+                    conversationUser.user.id
                 ) {
                     const res = await fetch(
                         `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${conversationUser.user.id}`,
@@ -273,6 +293,26 @@ const Dashboard = () => {
         countUnreadMessages();
     };
 
+    const getAdminUserDetail = async (userId: string) => {
+        try {
+            const res = await fetch(
+                `http://localhost:8000/api/user/${userId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            if (res.status === 200) {
+                const result = await res.json();
+                return result;
+            }
+            return undefined;
+        } catch (error) {
+            return error;
+        }
+    };
     /* set user details to state variable newUserDetails */
     const fetchUser = async (userId: string, user: any) => {
         setNewUserDetails({ userId, user });
@@ -400,40 +440,52 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="w-screen flex overflow-hidden">
-            {/* I want to make dynamic width */}
-            {menuSectionShowFlag && (
-                <div className="w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen bg-secondary">
-                    <MenuSection
-                        adminUser={adminUser}
-                        conversationsList={conversationsList}
-                        fetchMessages={fetchMessages}
-                        fetchUser={fetchUser}
-                        showListOfAllConversations={showListOfAllConversations}
-                        unreadMessagesCount={unreadMessagesCount}
-                        goToConversationSection={goToConversationSection}
-                    />
+        <>
+            {adminUser.id ? (
+                <div className="w-screen flex overflow-hidden">
+                    {/* I want to make dynamic width */}
+                    {menuSectionShowFlag && (
+                        <div className="w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen bg-secondary">
+                            <MenuSection
+                                conversationsList={conversationsList}
+                                fetchMessages={fetchMessages}
+                                fetchUser={fetchUser}
+                                showListOfAllConversations={
+                                    showListOfAllConversations
+                                }
+                                unreadMessagesCount={unreadMessagesCount}
+                                goToConversationSection={
+                                    goToConversationSection
+                                }
+                            />
+                        </div>
+                    )}
+                    {conversationSectionShowFlag && (
+                        <div className="w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen bg-white flex flex-col items-center">
+                            <ConversationsList
+                                socket={socket}
+                                currentConversationUser={
+                                    currentConversationUser
+                                }
+                                messages={messages}
+                                setMessages={setMessages}
+                                newUserDetails={newUserDetails}
+                                homePageForUserListFlag={
+                                    homePageForUserListFlag
+                                }
+                                homePageForConversationListFlag={
+                                    homePageForConversationListFlag
+                                }
+                                startConversation={startConversation}
+                                backToMenuOption={backToMenuOption}
+                            />
+                        </div>
+                    )}
                 </div>
+            ) : (
+                <p>loading...</p>
             )}
-            {conversationSectionShowFlag && (
-                <div className="w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen bg-white flex flex-col items-center">
-                    <ConversationsList
-                        adminUser={adminUser}
-                        socket={socket}
-                        currentConversationUser={currentConversationUser}
-                        messages={messages}
-                        setMessages={setMessages}
-                        newUserDetails={newUserDetails}
-                        homePageForUserListFlag={homePageForUserListFlag}
-                        homePageForConversationListFlag={
-                            homePageForConversationListFlag
-                        }
-                        startConversation={startConversation}
-                        backToMenuOption={backToMenuOption}
-                    />
-                </div>
-            )}
-        </div>
+        </>
     );
 };
 

@@ -12,7 +12,6 @@ import Profile from "./settings/Profile";
 import Index from "./settings";
 
 type ConversationListType = {
-    adminUser: any;
     socket: any;
     currentConversationUser: any;
     messages: any;
@@ -24,7 +23,6 @@ type ConversationListType = {
     backToMenuOption: () => void;
 };
 const ConversationsList = ({
-    adminUser,
     socket,
     currentConversationUser,
     messages,
@@ -36,7 +34,8 @@ const ConversationsList = ({
     backToMenuOption,
 }: ConversationListType) => {
     const { activeUsers } = useContext(primaryContext);
-    const { dashboardType, settingPage } = useContext(dashboardContext);
+    const { dashboardType, settingPage, adminUser, setAdminUser } =
+        useContext(dashboardContext);
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
