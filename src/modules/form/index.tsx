@@ -31,6 +31,7 @@ function Form({ isSignInPage = true }) {
             }
         );
         const result = await res.json();
+        
         if (res.status === 200) {
             if (result.token) {
                 localStorage.setItem("user:token", result.token);
@@ -41,13 +42,19 @@ function Form({ isSignInPage = true }) {
                 router.push("/");
             }
         }
-        setNotificationData((prevData: any) => ({
-            ...prevData,
-            type: result.type,
-            heading: result.heading,
-            message: result.message,
-            status: true,
-        }));
+
+        if (!isSignInPage) {
+            if (res.status === 200) {
+                router.push("/users/sign_in");
+            }
+            setNotificationData((prevData: any) => ({
+                ...prevData,
+                type: result.type,
+                heading: result.heading,
+                message: result.message,
+                status: true,
+            }));
+        }
     };
 
     return (
@@ -113,7 +120,7 @@ function Form({ isSignInPage = true }) {
                     <Button
                         label={isSignInPage ? "Sign in" : "Sign up"}
                         type="submit"
-                        className="w-5/6 sm:w-2/3 md:w-1/2 mb-2 bg-primary hover:bg-primary"
+                        className="w-5/6 sm:w-2/3 md:w-1/2 mb-2 text-white text-sm bg-primary hover:bg-primary"
                     />
                 </form>
                 {/* form section end */}

@@ -1,17 +1,26 @@
 import React, { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import AvatarIcon from "@/public/assets/avatar.svg";
-import UsersIcon from "@/public/assets/users.svg";
-import MessagesIcon from "@/public/assets/messages.svg";
 import Input from "@/src/components/input";
 import { dashboardContext } from "@/src/context";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faBan,
+    faComment,
+    faComments,
+    faHome,
+    faUserAlt,
+    faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 
 /* define type of status start. */
 type ListOfAllUserType = {
     user: {
         id: string;
         email: string;
-        fullName: string;
+        firstName: string;
+        lastName: string;
+        profileImage: string;
     };
 }[];
 
@@ -40,6 +49,7 @@ const MenuSection = ({
         settingPage,
         setSettingPage,
         adminUser,
+        theme,
     } = useContext(dashboardContext);
     /* context declaration end. */
 
@@ -49,7 +59,9 @@ const MenuSection = ({
             user: {
                 id: "",
                 email: "",
-                fullName: "",
+                firstName: "",
+                lastName: "",
+                profileImage: "",
             },
         },
     ]);
@@ -63,8 +75,6 @@ const MenuSection = ({
 
     /* useEffect functions start. */
     useEffect(() => {
-        console.log("adminUser", adminUser);
-        
         if (dashboardType.user) showListOfAllUser();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -82,20 +92,25 @@ const MenuSection = ({
     }, [conversationsList]);
 
     useEffect(() => {
-        const filterConversationsList = conversationsList.filter(
-            (conversation: any) =>
-                conversation.user.fullName
+        if (searchText) {
+            const filterConversationsList = conversationsList.filter(
+                (conversation: any) =>
+                    conversation.user.firstName
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase())
+            );
+            setSearchedConversationsList(filterConversationsList);
+
+            const filterUsersList = listOfAllUsers.filter((user: any) =>
+                user.user.firstName
                     .toLowerCase()
                     .includes(searchText.toLowerCase())
-        );
-        setSearchedConversationsList(filterConversationsList);
-
-        const filterUsersList = listOfAllUsers.filter((user: any) =>
-            user.user.fullName.toLowerCase().includes(searchText.toLowerCase())
-        );
-        setSearchedListOfAllUsers(filterUsersList);
+            );
+            setSearchedListOfAllUsers(filterUsersList);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchText]);
+
     /* useEffect functions end. */
 
     /* show list of all users */
@@ -107,6 +122,7 @@ const MenuSection = ({
             },
         });
         const result = await res.json();
+
         setListOfAllUsers(result);
         // setShowUsersFlag(true);
         setDashboardType((prevState: any) => ({
@@ -183,7 +199,7 @@ const MenuSection = ({
                 {!dashboardType.setting &&
                     (dashboardType.user ? (
                         <div
-                            className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
+                            className="ml-auto p-2 cursor-pointer"
                             onClick={() => {
                                 setDashboardType({
                                     chat: true,
@@ -194,16 +210,17 @@ const MenuSection = ({
                                 setSearchText("");
                             }}
                         >
-                            <Image
-                                src={MessagesIcon}
-                                width={30}
-                                height={30}
-                                alt={"messageIcon"}
+                            <FontAwesomeIcon
+                                icon={faComments}
+                                style={{
+                                    color: theme! == "light" ? "#000" : "#fff",
+                                }}
+                                size="2xl"
                             />
                         </div>
                     ) : (
                         <div
-                            className="ml-auto p-2 cursor-pointer bg-secondary rounded-full"
+                            className="ml-auto p-2 cursor-pointer"
                             onClick={() => {
                                 setDashboardType({
                                     chat: false,
@@ -214,11 +231,12 @@ const MenuSection = ({
                                 setSearchText("");
                             }}
                         >
-                            <Image
-                                src={UsersIcon}
-                                width={30}
-                                height={30}
-                                alt={"UsersIcon"}
+                            <FontAwesomeIcon
+                                icon={faUsers}
+                                style={{
+                                    color: theme! == "light" ? "#000" : "#fff",
+                                }}
+                                size="2xl"
                             />
                         </div>
                     ))}
@@ -250,16 +268,28 @@ const MenuSection = ({
                                         if (user.id !== adminUser?.id) {
                                             return (
                                                 <div
-                                                    className={`py-6 border-b border-b-gray-300 ${
+                                                    className={`py-6 border-b ${
+                                                        theme === "light"
+                                                            ? "border-b-gray-300"
+                                                            : "border-b-gray-700"
+                                                    } ${
                                                         chosenListOfItem ===
                                                         index
-                                                            ? "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                                            ? `sm:shadow-sm sm:rounded-lg ${
+                                                                  theme ===
+                                                                  "light"
+                                                                      ? "sm:bg-light-options text-light-text"
+                                                                      : theme ===
+                                                                        "dark"
+                                                                      ? "sm:bg-dark-options text-dark-text"
+                                                                      : "sm:bg-trueDark-options text-trueDark-text"
+                                                              }`
                                                             : ""
                                                     }`}
                                                     key={index}
                                                 >
                                                     <div
-                                                        className={`cursor-pointer flex items-center`}
+                                                        className={`cursor-pointer flex items-center px-2`}
                                                         onClick={() => {
                                                             setChosenListOfItem(
                                                                 index
@@ -272,19 +302,27 @@ const MenuSection = ({
                                                     >
                                                         <div>
                                                             <Image
-                                                                src={AvatarIcon}
+                                                                className="object-cover w-14 h-14 rounded-full"
+                                                                src={
+                                                                    user.profileImage
+                                                                        ? user.profileImage
+                                                                        : AvatarIcon
+                                                                }
                                                                 alt={
                                                                     "AvatarIcon"
                                                                 }
                                                                 width={50}
-                                                                height={50}
+                                                                height={20}
                                                             />
                                                         </div>
                                                         <div className="ml-4">
                                                             <h3 className="text-lg">
-                                                                {user?.fullName}
+                                                                {
+                                                                    user?.firstName
+                                                                }{" "}
+                                                                {user?.lastName}
                                                             </h3>
-                                                            <p className="text-sm font-light text-gray-500">
+                                                            <p className="text-sm font-light">
                                                                 {user?.email}
                                                             </p>
                                                         </div>
@@ -318,15 +356,26 @@ const MenuSection = ({
                                     ) => {
                                         return (
                                             <div
-                                                className={`py-6 border-b border-b-gray-300 ${
+                                                className={`py-6 border-b ${
+                                                    theme === "light"
+                                                        ? "border-b-gray-300"
+                                                        : "border-b-gray-700"
+                                                } ${
                                                     chosenListOfItem === index
-                                                        ? "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                                        ? `sm:shadow-sm sm:rounded-lg ${
+                                                              theme === "light"
+                                                                  ? "sm:bg-light-options text-light-text"
+                                                                  : theme ===
+                                                                    "dark"
+                                                                  ? "sm:bg-dark-options text-dark-text"
+                                                                  : "sm:bg-trueDark-options text-trueDark-text"
+                                                          }`
                                                         : ""
                                                 }`}
                                                 key={index}
                                             >
                                                 <div
-                                                    className="cursor-pointer flex items-center"
+                                                    className="cursor-pointer flex items-center px-2"
                                                     onClick={() => {
                                                         setChosenListOfItem(
                                                             index
@@ -339,7 +388,12 @@ const MenuSection = ({
                                                 >
                                                     <div>
                                                         <Image
-                                                            src={AvatarIcon}
+                                                            className="object-cover w-14 h-14 rounded-full"
+                                                            src={
+                                                                user.profileImage
+                                                                    ? user.profileImage
+                                                                    : AvatarIcon
+                                                            }
                                                             alt={"AvatarIcon"}
                                                             width={50}
                                                             height={50}
@@ -347,7 +401,8 @@ const MenuSection = ({
                                                     </div>
                                                     <div className="ml-4">
                                                         <h3 className="text-lg">
-                                                            {user?.fullName}
+                                                            {user?.firstName}{" "}
+                                                            {user?.lastName}
                                                         </h3>
                                                         {/* <p className="text-sm font-light text-gray-500">
                                                             {user?.email}
@@ -381,24 +436,38 @@ const MenuSection = ({
                     {dashboardType.setting && (
                         <>
                             <div
-                                className={`py-6 border-b border-b-gray-300 ${
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
                                     settingPage.profile &&
-                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                    `sm:shadow-sm sm:rounded-lg ${
+                                        theme === "light"
+                                            ? "sm:bg-light-options text-light-text"
+                                            : theme === "dark"
+                                            ? "sm:bg-dark-options text-dark-text"
+                                            : "sm:bg-trueDark-options text-trueDark-text"
+                                    }`
                                 }`}
                             >
                                 <div
-                                    className="cursor-pointer flex items-center"
+                                    className="cursor-pointer flex items-center mx-5 sm:mx-10"
                                     onClick={() => {
                                         handleSettingPage("profile");
                                         goToConversationSection();
                                     }}
                                 >
                                     <div>
-                                        <Image
-                                            src={AvatarIcon}
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
+                                        <FontAwesomeIcon
+                                            icon={faUserAlt}
+                                            style={{
+                                                color:
+                                                    theme! == "light"
+                                                        ? "#000"
+                                                        : "#fff",
+                                            }}
+                                            size="xl"
                                         />
                                     </div>
                                     <div className="ml-4">
@@ -409,24 +478,38 @@ const MenuSection = ({
                                 </div>
                             </div>
                             <div
-                                className={`py-6 border-b border-b-gray-300 ${
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
                                     settingPage.general &&
-                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                    `sm:shadow-sm sm:rounded-lg ${
+                                        theme === "light"
+                                            ? "sm:bg-light-options text-light-text"
+                                            : theme === "dark"
+                                            ? "sm:bg-dark-options text-dark-text"
+                                            : "sm:bg-trueDark-options text-trueDark-text"
+                                    }`
                                 }`}
                             >
                                 <div
-                                    className="cursor-pointer flex items-center"
+                                    className="cursor-pointer flex items-center mx-5 sm:mx-10"
                                     onClick={() => {
                                         handleSettingPage("general");
                                         goToConversationSection();
                                     }}
                                 >
                                     <div>
-                                        <Image
-                                            src={AvatarIcon}
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
+                                        <FontAwesomeIcon
+                                            icon={faHome}
+                                            style={{
+                                                color:
+                                                    theme! == "light"
+                                                        ? "#000"
+                                                        : "#fff",
+                                            }}
+                                            size="xl"
                                         />
                                     </div>
                                     <div className="ml-4">
@@ -434,25 +517,39 @@ const MenuSection = ({
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                className={`py-6 border-b border-b-gray-300 ${
+                            {/* <div
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
                                     settingPage.chats &&
-                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                    `sm:shadow-sm sm:rounded-lg ${
+                                        theme === "light"
+                                            ? "sm:bg-light-options text-light-text"
+                                            : theme === "dark"
+                                            ? "sm:bg-dark-options text-dark-text"
+                                            : "sm:bg-trueDark-options text-trueDark-text"
+                                    }`
                                 }`}
                             >
                                 <div
-                                    className="cursor-pointer flex items-center"
+                                    className="cursor-pointer flex items-center mx-5 sm:mx-10"
                                     onClick={() => {
                                         handleSettingPage("chats");
                                         goToConversationSection();
                                     }}
                                 >
                                     <div>
-                                        <Image
-                                            src={AvatarIcon}
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
+                                        <FontAwesomeIcon
+                                            icon={faComment}
+                                            style={{
+                                                color:
+                                                    theme! == "light"
+                                                        ? "#000"
+                                                        : "#fff",
+                                            }}
+                                            size="xl"
                                         />
                                     </div>
                                     <div className="ml-4">
@@ -461,54 +558,81 @@ const MenuSection = ({
                                 </div>
                             </div>
                             <div
-                                className={`py-6 border-b border-b-gray-300 ${
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
                                     settingPage.help &&
-                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                    `sm:shadow-sm sm:rounded-lg ${
+                                        theme === "light"
+                                            ? "sm:bg-light-options text-light-text"
+                                            : theme === "dark"
+                                            ? "sm:bg-dark-options text-dark-text"
+                                            : "sm:bg-trueDark-options text-trueDark-text"
+                                    }`
                                 }`}
                             >
                                 <div
-                                    className="cursor-pointer flex items-center"
+                                    className="cursor-pointer flex items-center mx-5 sm:mx-10"
                                     onClick={() => {
                                         handleSettingPage("help");
                                         goToConversationSection();
                                     }}
                                 >
                                     <div>
-                                        <Image
-                                            src={AvatarIcon}
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
+                                        <FontAwesomeIcon
+                                            icon={faHandshake}
+                                            style={{
+                                                color:
+                                                    theme! == "light"
+                                                        ? "#000"
+                                                        : "#fff",
+                                            }}
+                                            size="xl"
                                         />
                                     </div>
                                     <div className="ml-4">
                                         <h3 className="text-lg">Help</h3>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                             <div
-                                className={`py-6 border-b border-b-gray-300 ${
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
                                     settingPage.logout &&
-                                    "sm:bg-gray-200 sm:shadow-sm sm:rounded-lg"
+                                    `sm:shadow-sm sm:rounded-lg ${
+                                        theme === "light"
+                                            ? "sm:bg-light-options text-light-text"
+                                            : theme === "dark"
+                                            ? "sm:bg-dark-options text-dark-text"
+                                            : "sm:bg-trueDark-options text-trueDark-text"
+                                    }`
                                 }`}
                             >
                                 <div
-                                    className="cursor-pointer flex items-center"
+                                    className="cursor-pointer flex items-center mx-5 sm:mx-10"
                                     onClick={() => {
                                         handleSettingPage("logout");
                                         goToConversationSection();
                                     }}
                                 >
                                     <div>
-                                        <Image
-                                            src={AvatarIcon}
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
+                                        <FontAwesomeIcon
+                                            icon={faBan}
+                                            style={{
+                                                color: "rgb(248 113 113 / var(--tw-text-opacity))",
+                                            }}
+                                            size="xl"
                                         />
                                     </div>
                                     <div className="ml-4">
-                                        <h3 className="text-lg">Log Out</h3>
+                                        <h3 className="text-lg text-red-400">
+                                            Log Out
+                                        </h3>
                                     </div>
                                 </div>
                             </div>

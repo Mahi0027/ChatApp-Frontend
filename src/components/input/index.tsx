@@ -1,4 +1,5 @@
-import React from "react";
+import { dashboardContext } from "@/src/context";
+import React, { useContext } from "react";
 
 const Input = ({
     label = "",
@@ -15,6 +16,8 @@ const Input = ({
         return;
     },
 }) => {
+    const { theme } = useContext(dashboardContext);
+    
     return (
         <div className={`w-5/6 ${className}`}>
             <label
@@ -26,9 +29,15 @@ const Input = ({
             <input
                 type={type}
                 id={name}
-                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                className={`${
+                    theme !== undefined && theme !== "light"
+                        ? "bg-gray-700  text-gray-100 border-gray-500"
+                        : "bg-gray-50 text-gray-900 border-gray-300"
+                } border text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
                     isTextArea ? "resize-y" : ""
-                } dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${disabled? "bg-gray-300 border-gray-500":""} ${inputClassName}`}
+                } dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${
+                    disabled ? "bg-gray-300 border-gray-500" : ""
+                } ${inputClassName}`}
                 placeholder={placeholder}
                 required={isRequired}
                 value={value}

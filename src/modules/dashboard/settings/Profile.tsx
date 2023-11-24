@@ -19,7 +19,7 @@ type formDatatype = {
 const Profile = () => {
     /* context declaration start. */
     const { setNotificationData } = useContext(primaryContext);
-    const { adminUser, setAdminUser } = useContext(dashboardContext);
+    const { adminUser, setAdminUser, theme } = useContext(dashboardContext);
     /* context declaration end. */
 
     /* ref hook variable declaration start. */
@@ -69,7 +69,7 @@ const Profile = () => {
             }));
         }
     };
-    
+
     const handleEditClick = () => {
         fileInputRef.current.click(); // Trigger the file input
     };
@@ -105,8 +105,6 @@ const Profile = () => {
 
     const handleSubmitForm = async (e: any) => {
         e.preventDefault();
-        // console.log("formData", formData);
-
         const res = await fetch("http://localhost:8000/api/userUpdate", {
             method: "POST",
             headers: {
@@ -136,7 +134,13 @@ const Profile = () => {
     return (
         <>
             <form
-                className="w-full max-h-[80%] bg-secondary mt-14 mb-0.5 rounded-lg overflow-y-auto shadow-lg"
+                className={`w-full max-h-[80%] mt-14 mb-0.5 rounded-lg overflow-y-auto shadow-lg ${
+                    theme === "light"
+                        ? "bg-light-background text-light-text"
+                        : theme === "dark"
+                        ? "bg-dark-background text-dark-text"
+                        : "bg-trueDark-background text-trueDark-text"
+                }`}
                 onSubmit={(e) => {
                     handleSubmitForm(e);
                 }}
@@ -166,7 +170,9 @@ const Profile = () => {
                     />
                     <div className="absolute right-10 bottom-2 flex justify-center items-center">
                         <Image
-                            className="hidden h-8 w-8 font-bold text-5xl cursor-pointer z-100 group-hover:block"
+                            className={`hidden h-8 w-8 font-bold text-5xl cursor-pointer z-100 group-hover:block ${
+                                theme !== "light" ? "group-hover:invert" : ""
+                            }`}
                             src={edit}
                             alt="edit"
                             onClick={handleEditClick}
@@ -261,14 +267,18 @@ const Profile = () => {
                         <Button
                             label="Reset"
                             type="button"
-                            className="w-full mx-2 text-black bg-gray-200 hover:text-white hover:bg-gray-400"
+                            className={`w-full mx-2 bg-gray-200 text-sm hover:text-white hover:bg-gray-400 ${
+                                theme !== "light" ? "text-black" : "text-white"
+                            }`}
                         />
                     </div>
                     <div className="w-full flex justify-center my-2 md:my-0">
                         <Button
                             label="Submit"
                             type="submit"
-                            className="w-full mx-2 text-black bg-green-300 hover:text-white hover:bg-green-400"
+                            className={`w-full mx-2 bg-green-300 text-sm hover:text-white hover:bg-green-400 ${
+                                theme !== "light" ? "text-black" : "text-white"
+                            }`}
                         />
                     </div>
                 </div>
