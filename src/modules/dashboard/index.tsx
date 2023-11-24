@@ -1,8 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import MenuSection from "./MenuSection";
 import ConversationsList from "./ConversationsList";
 import { io } from "socket.io-client";
 import { dashboardContext, primaryContext } from "@/src/context";
+import Loader from "@/public/assets/loader.gif";
 
 /* define type of status start. */
 type CurrentConversationUserType = {
@@ -27,7 +29,9 @@ type ConversationsListType = {
     user: {
         id: string;
         email: string;
-        fullName: string;
+        firstName: string;
+        lastName: string;
+        profileImage: string;
     };
 }[];
 /* define type of status end. */
@@ -35,7 +39,7 @@ type ConversationsListType = {
 const Dashboard = () => {
     /* context declaration start. */
     const { setActiveUsers } = useContext(primaryContext);
-    const { dashboardType, setDashboardType, adminUser, setAdminUser } =
+    const { dashboardType, setDashboardType, adminUser, setAdminUser, theme } =
         useContext(
             dashboardContext
         ); /* it's for show/hide user/message icon. */
@@ -79,7 +83,9 @@ const Dashboard = () => {
                 user: {
                     id: "",
                     email: "",
-                    fullName: "",
+                    firstName: "",
+                    lastName: "",
+                    profileImage: "",
                 },
             },
         ]);
@@ -97,17 +103,18 @@ const Dashboard = () => {
     useEffect(() => {
         /* create socket user */
         setSocket(io("http://localhost:8080"));
-        const localStorageAdminDetail = JSON.parse(
-            localStorage.getItem("user:detail") || "null"
-        );
-        console.log("localStorageAdminDetail", localStorageAdminDetail);
         const fetchData = async () => {
-            if (localStorageAdminDetail.id) {
+            const localStorageAdminDetail = await JSON.parse(
+                localStorage.getItem("user:detail") || "null"
+            );
+            if (
+                localStorageAdminDetail !== null &&
+                localStorageAdminDetail.id
+            ) {
                 try {
                     const adminUserDetails = await getAdminUserDetail(
                         localStorageAdminDetail.id
                     );
-                    console.log("adminUserDetails", adminUserDetails);
                     if (setAdminUser) {
                         setAdminUser({
                             id: adminUserDetails._id,
@@ -117,6 +124,7 @@ const Dashboard = () => {
                             nickName: adminUserDetails.nickName,
                             profileImage: adminUserDetails.profileImage,
                             status: adminUserDetails.status,
+                            theme: adminUserDetails.theme,
                         });
                     }
                 } catch (error) {
@@ -439,54 +447,98 @@ const Dashboard = () => {
         }));
     };
 
-    return (
-        <>
-            {adminUser.id ? (
-                <div className="w-screen flex overflow-hidden">
-                    {/* I want to make dynamic width */}
-                    {menuSectionShowFlag && (
-                        <div className="w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen bg-secondary">
-                            <MenuSection
-                                conversationsList={conversationsList}
-                                fetchMessages={fetchMessages}
-                                fetchUser={fetchUser}
-                                showListOfAllConversations={
-                                    showListOfAllConversations
-                                }
-                                unreadMessagesCount={unreadMessagesCount}
-                                goToConversationSection={
-                                    goToConversationSection
-                                }
-                            />
-                        </div>
-                    )}
-                    {conversationSectionShowFlag && (
-                        <div className="w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen bg-white flex flex-col items-center">
-                            <ConversationsList
-                                socket={socket}
-                                currentConversationUser={
-                                    currentConversationUser
-                                }
-                                messages={messages}
-                                setMessages={setMessages}
-                                newUserDetails={newUserDetails}
-                                homePageForUserListFlag={
-                                    homePageForUserListFlag
-                                }
-                                homePageForConversationListFlag={
-                                    homePageForConversationListFlag
-                                }
-                                startConversation={startConversation}
-                                backToMenuOption={backToMenuOption}
-                            />
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <p>loading...</p>
-            )}
-        </>
-    );
+    const divComponent = useMemo(() => {
+        return (
+            <>
+                {adminUser.id ? (
+                    <div className="w-screen flex overflow-hidden">
+                        {/* I want to make dynamic width */}
+                        {menuSectionShowFlag && (
+                            <div
+                                className={`w-full max-w-[640px] sm:w-1/2 md:w-2/5 h-screen ${
+                                    theme === "light"
+                                        ? "bg-light-background text-light-text"
+                                        : theme === "dark"
+                                        ? "bg-dark-background text-dark-text"
+                                        : "bg-trueDark-background text-trueDark-text"
+                                }`}
+                            >
+                                <MenuSection
+                                    conversationsList={conversationsList}
+                                    fetchMessages={fetchMessages}
+                                    fetchUser={fetchUser}
+                                    showListOfAllConversations={
+                                        showListOfAllConversations
+                                    }
+                                    unreadMessagesCount={unreadMessagesCount}
+                                    goToConversationSection={
+                                        goToConversationSection
+                                    }
+                                />
+                            </div>
+                        )}
+                        {conversationSectionShowFlag && (
+                            <div
+                                className={`w-full sm:w-1/2 md:w-3/5 lg:w-full h-screen flex flex-col items-center ${
+                                    theme === "light"
+                                        ? "bg-light-options text-light-text"
+                                        : theme === "dark"
+                                        ? "bg-dark-options text-dark-text"
+                                        : "bg-trueDark-options text-trueDark-text"
+                                }`}
+                            >
+                                <ConversationsList
+                                    socket={socket}
+                                    currentConversationUser={
+                                        currentConversationUser
+                                    }
+                                    messages={messages}
+                                    setMessages={setMessages}
+                                    newUserDetails={newUserDetails}
+                                    homePageForUserListFlag={
+                                        homePageForUserListFlag
+                                    }
+                                    homePageForConversationListFlag={
+                                        homePageForConversationListFlag
+                                    }
+                                    startConversation={startConversation}
+                                    backToMenuOption={backToMenuOption}
+                                />
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <p>
+                        <Image
+                            src={Loader}
+                            alt={"loader"}
+                            width={75}
+                            height={75}
+                        />
+                    </p>
+                )}
+            </>
+        );
+    }, [
+        adminUser.id,
+        conversationSectionShowFlag,
+        conversationsList,
+        currentConversationUser,
+        fetchMessages,
+        fetchUser,
+        homePageForConversationListFlag,
+        homePageForUserListFlag,
+        menuSectionShowFlag,
+        messages,
+        newUserDetails,
+        showListOfAllConversations,
+        socket,
+        startConversation,
+        theme,
+        unreadMessagesCount,
+    ]);
+
+    return divComponent;
 };
 
 export default Dashboard;

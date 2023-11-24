@@ -1,6 +1,6 @@
 import Dashboard from "@/src/modules/dashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { dashboardContext } from "@/src/context";
 
 /* define type of status start. */
@@ -26,6 +26,7 @@ type adminUserType = {
     nickName: string;
     profileImage: string;
     status: string;
+    theme: number;
 };
 /* define type of status end. */
 
@@ -50,13 +51,36 @@ export default function Home() {
         lastName: "",
         nickName: "",
         profileImage: "",
-        status:"",
+        status: "",
+        theme: 0,
     }); /* admin user */
+    const [theme, setTheme] = useState<string>("light");
     /* state variable declaration end. */
+
+    useEffect(() => {
+        if (adminUser.theme) {
+            toggleTheme(adminUser.theme);
+        }
+    }, [adminUser.theme]);
+
+    const toggleTheme = (newTheme: number) => {
+        setTheme((prevTheme) => {
+            switch (newTheme) {
+                case 1:
+                    return "light";
+                case 2:
+                    return "dark";
+                case 3:
+                    return "trueDark";
+                default:
+                    return "light";
+            }
+        });
+    };
     return (
         <>
             <ProtectedRoute auth={true}>
-                <div className="bg-[#e1e7f2] h-screen flex justify-center items-center">
+                <div className="h-screen flex justify-center items-center">
                     <dashboardContext.Provider
                         value={{
                             dashboardType,
@@ -65,6 +89,8 @@ export default function Home() {
                             setSettingPage,
                             adminUser,
                             setAdminUser,
+                            theme,
+                            toggleTheme,
                         }}
                     >
                         <Dashboard />

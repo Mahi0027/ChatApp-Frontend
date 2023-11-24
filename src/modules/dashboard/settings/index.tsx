@@ -2,6 +2,7 @@ import { dashboardContext } from '@/src/context';
 import React, { useContext } from 'react'
 import Profile from './Profile';
 import General from './General';
+import Logout from './Logout';
 
 const Index = () => {
 
@@ -21,11 +22,7 @@ const Index = () => {
                         <p>This is help setting page</p>
                     </>
                 )}
-                {settingPage.logout && (
-                    <>
-                        <p>This is logout setting page</p>
-                    </>
-                )}
+                {settingPage.logout && <Logout />}
             </div>
         </>
     );
