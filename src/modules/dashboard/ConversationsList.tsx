@@ -39,7 +39,11 @@ const ConversationsList = ({
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
     const [onlineFlag, setOnlineFlag] = useState<boolean>(false);
+
+    /* ref hook variable declaration start. */
     const containerRef = useRef<any>(null);
+    const fileInputRef = useRef<any>(null);
+    /* ref hook variable declaration end. */
 
     useEffect(() => {
         setEmoji(emojis[Math.floor(Math.random() * 320)]);
@@ -67,6 +71,38 @@ const ConversationsList = ({
         if (!foundOnlineFlag) setOnlineFlag(false);
     }, [activeUsers, currentConversationUser.user.id]);
     // Function to scroll to the bottom of the container
+
+    /* for sending image */
+    const handleEditClick = () => {
+        fileInputRef.current.click(); // Trigger the file input
+    };
+
+    const handleImageInputChange = (event: any) => {
+        const selectedFile = event.target.files[0]; // Get the selected file
+
+        if (selectedFile) {
+            const reader = new FileReader();
+            reader.onloadend = (event) => {
+                const img = document.createElement("img");
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const maxWidth = 300;
+                    const scale = Math.min(maxWidth / img.width, 1);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext("2d");
+                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressedDataURL = canvas.toDataURL(
+                        "image/jpeg",
+                        0.5
+                    );
+                    sendMessage("image", compressedDataURL);
+                };
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    };
     const scrollToBottom = () => {
         if (containerRef.current) {
             containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -74,13 +110,23 @@ const ConversationsList = ({
     };
 
     /* send message */
-    const sendMessage = async () => {
+    const sendMessage = async (type = "text", data = "") => {
+        const currentTime = new Date().toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
         const inputData = {
             conversationId: currentConversationUser?.conversationId,
             senderId: adminUser?.id,
-            message: text,
+            message: type === "image" ? data : text,
+            type: type,
+            timeStamp: currentTime,
             receiverId: currentConversationUser?.user?.id,
         };
+        console.log(inputData);
 
         setMessages((prevData: any) => [
             ...prevData,
@@ -88,9 +134,12 @@ const ConversationsList = ({
                 user: {
                     id: adminUser.id,
                     email: adminUser.email,
-                    fullName: adminUser.fullName,
+                    firstName: adminUser.firstName,
+                    lastName: adminUser.lastName,
                 },
-                message: text,
+                message: type === "image" ? data : text,
+                timeStamp: currentTime,
+                type: type,
             },
         ]);
 
@@ -244,9 +293,13 @@ const ConversationsList = ({
                                             (
                                                 {
                                                     message,
+                                                    type,
+                                                    timeStamp,
                                                     user: { id },
                                                 }: {
                                                     message: any;
+                                                    type: any;
+                                                    timeStamp: any;
                                                     user: { id: any };
                                                 },
                                                 index: number
@@ -276,7 +329,37 @@ const ConversationsList = ({
                                                                       }`
                                                             }`}
                                                         >
-                                                            {message}
+                                                            {type === "text" ? (
+                                                                message
+                                                            ) : (
+                                                                <Image
+                                                                    className="object-cover w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72"
+                                                                    src={
+                                                                        message
+                                                                    }
+                                                                    width={100}
+                                                                    height={100}
+                                                                    alt={
+                                                                        "Image Message"
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </div>
+                                                        <div
+                                                            className={`${
+                                                                theme ===
+                                                                "light"
+                                                                    ? "text-gray-500"
+                                                                    : "text-gray-200"
+                                                            }`}
+                                                            style={{
+                                                                fontSize:
+                                                                    "0.60rem",
+                                                                lineHeight:
+                                                                    "1.25rem",
+                                                            }}
+                                                        >
+                                                            {timeStamp}
                                                         </div>
                                                     </div>
                                                 );
@@ -328,11 +411,14 @@ const ConversationsList = ({
                                             size="2x"
                                         />
                                     </div>
-                                    <div
-                                        className={`ml-4 p-2 cursor-pointer ${
-                                            !text && "pointer-events-none"
-                                        }`}
-                                    >
+                                    <div className={`ml-4 p-2 cursor-pointer`}>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            style={{ display: "none" }}
+                                            accept=".jpg, .jpeg, .png"
+                                            onChange={handleImageInputChange}
+                                        />
                                         <FontAwesomeIcon
                                             icon={faAdd}
                                             style={{
@@ -342,6 +428,7 @@ const ConversationsList = ({
                                                         : "#fff",
                                             }}
                                             size="2x"
+                                            onClick={handleEditClick}
                                         />
                                     </div>
                                 </div>
