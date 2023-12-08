@@ -10,27 +10,25 @@ import {
     faComments,
     faHome,
     faUserAlt,
+    faUserGroup,
     faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-
-/* define type of status start. */
-type ListOfAllUserType = {
-    user: {
-        id: string;
-        email: string;
-        firstName: string;
-        lastName: string;
-        profileImage: string;
-    };
-}[];
+import { ListOfAllUserType } from "@/src/pages";
 
 type MenuSectionType = {
     conversationsList: any;
-    fetchMessages: (arg0: string, arg1: any) => void;
+    fetchMessages: (
+        arg0: string,
+        groupName: string,
+        arg1: boolean,
+        arg2: any
+    ) => void;
     fetchUser: (arg0: string, arg1: any) => void;
     showListOfAllConversations: () => void;
     unreadMessagesCount: any;
+    unreadGroupMessagesCount: any;
     goToConversationSection: () => void;
+    createNewGroup: () => void;
 };
 /* define type of status end. */
 
@@ -40,7 +38,9 @@ const MenuSection = ({
     fetchUser,
     showListOfAllConversations,
     unreadMessagesCount,
+    unreadGroupMessagesCount,
     goToConversationSection,
+    createNewGroup,
 }: MenuSectionType) => {
     /* context declaration start. */
     const {
@@ -49,28 +49,17 @@ const MenuSection = ({
         settingPage,
         setSettingPage,
         adminUser,
+        listOfAllUsers,
+        setListOfAllUsers,
         theme,
     } = useContext(dashboardContext);
     /* context declaration end. */
-
-    /* state variable declaration start. */
-    const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
-        {
-            user: {
-                id: "",
-                email: "",
-                firstName: "",
-                lastName: "",
-                profileImage: "",
-            },
-        },
-    ]);
     const [searchedListOfAllUsers, setSearchedListOfAllUsers] =
         useState<ListOfAllUserType>(listOfAllUsers);
     const [searchedConversationsList, setSearchedConversationsList] =
         useState<any>(conversationsList);
     const [searchText, setSearchText] = useState<string>("");
-    const [chosenListOfItem, setChosenListOfItem] = useState(-1);
+    const [chosenListOfItem, setChosenListOfItem] = useState(-2);
     /* state variable declaration end. */
 
     /* useEffect functions start. */
@@ -84,7 +73,7 @@ const MenuSection = ({
     }, [listOfAllUsers]);
 
     useEffect(() => {
-        setChosenListOfItem(-1);
+        setChosenListOfItem(-2);
     }, [dashboardType]);
 
     useEffect(() => {
@@ -94,19 +83,31 @@ const MenuSection = ({
     useEffect(() => {
         if (searchText) {
             const filterConversationsList = conversationsList.filter(
-                (conversation: any) =>
-                    conversation.user.firstName
-                        .toLowerCase()
-                        .includes(searchText.toLowerCase())
+                (conversation: any) => {
+                    if (conversation.isGroup) {
+                        return conversation.groupName
+                            .toLowerCase()
+                            .includes(searchText.toLowerCase());
+                    } else {
+                        return conversation.users[0].firstName
+                            .toLowerCase()
+                            .includes(searchText.toLowerCase());
+                    }
+                }
             );
             setSearchedConversationsList(filterConversationsList);
 
-            const filterUsersList = listOfAllUsers.filter((user: any) =>
-                user.user.firstName
-                    .toLowerCase()
-                    .includes(searchText.toLowerCase())
-            );
+            const filterUsersList = listOfAllUsers.filter((user: any) => {
+                if (user.user.firstName) {
+                    return user.user.firstName
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase());
+                }
+            });
             setSearchedListOfAllUsers(filterUsersList);
+        } else {
+            setSearchedListOfAllUsers(listOfAllUsers);
+            setSearchedConversationsList(conversationsList);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchText]);
@@ -262,6 +263,47 @@ const MenuSection = ({
                     {/* all users list. */}
                     {dashboardType.user && (
                         <>
+                            <div
+                                className={`py-6 border-b ${
+                                    theme === "light"
+                                        ? "border-b-gray-300"
+                                        : "border-b-gray-700"
+                                } ${
+                                    chosenListOfItem === -1
+                                        ? `sm:shadow-sm sm:rounded-lg ${
+                                              theme === "light"
+                                                  ? "sm:bg-light-options text-light-text"
+                                                  : theme === "dark"
+                                                  ? "sm:bg-dark-options text-dark-text"
+                                                  : "sm:bg-trueDark-options text-trueDark-text"
+                                          }`
+                                        : ""
+                                }`}
+                            >
+                                <div
+                                    className={`cursor-pointer flex items-center justify-center text-orange-400`}
+                                    onClick={() => {
+                                        setChosenListOfItem(-1);
+                                        createNewGroup();
+                                    }}
+                                >
+                                    <div>
+                                        <FontAwesomeIcon
+                                            icon={faUserGroup}
+                                            style={{
+                                                color: "#FB923C",
+                                            }}
+                                            size="2xl"
+                                        />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg">
+                                            Create Group
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+
                             {searchedListOfAllUsers.length > 0 ? (
                                 searchedListOfAllUsers.map(
                                     ({ user }, index: number) => {
@@ -347,81 +389,177 @@ const MenuSection = ({
                                     (
                                         {
                                             conversationId,
-                                            user,
+                                            groupName,
+                                            isGroup,
+                                            users,
                                         }: {
                                             conversationId: string;
-                                            user: any;
+                                            groupName: string;
+                                            isGroup: boolean;
+                                            users: any;
                                         },
                                         index: number
                                     ) => {
-                                        return (
-                                            <div
-                                                className={`py-6 border-b ${
-                                                    theme === "light"
-                                                        ? "border-b-gray-300"
-                                                        : "border-b-gray-700"
-                                                } ${
-                                                    chosenListOfItem === index
-                                                        ? `sm:shadow-sm sm:rounded-lg ${
-                                                              theme === "light"
-                                                                  ? "sm:bg-light-options text-light-text"
-                                                                  : theme ===
-                                                                    "dark"
-                                                                  ? "sm:bg-dark-options text-dark-text"
-                                                                  : "sm:bg-trueDark-options text-trueDark-text"
-                                                          }`
-                                                        : ""
-                                                }`}
-                                                key={index}
-                                            >
+                                        if (isGroup) {
+                                            return (
                                                 <div
-                                                    className="cursor-pointer flex items-center px-2"
-                                                    onClick={() => {
-                                                        setChosenListOfItem(
-                                                            index
-                                                        );
-                                                        fetchMessages(
-                                                            conversationId,
-                                                            user
-                                                        );
-                                                    }}
+                                                    className={`py-6 border-b ${
+                                                        theme === "light"
+                                                            ? "border-b-gray-300"
+                                                            : "border-b-gray-700"
+                                                    } ${
+                                                        chosenListOfItem ===
+                                                        index
+                                                            ? `sm:shadow-sm sm:rounded-lg ${
+                                                                  theme ===
+                                                                  "light"
+                                                                      ? "sm:bg-light-options text-light-text"
+                                                                      : theme ===
+                                                                        "dark"
+                                                                      ? "sm:bg-dark-options text-dark-text"
+                                                                      : "sm:bg-trueDark-options text-trueDark-text"
+                                                              }`
+                                                            : ""
+                                                    }`}
+                                                    key={index}
                                                 >
-                                                    <div>
-                                                        <Image
-                                                            className="object-cover w-14 h-14 rounded-full"
-                                                            src={
-                                                                user.profileImage
-                                                                    ? user.profileImage
-                                                                    : AvatarIcon
-                                                            }
-                                                            alt={"AvatarIcon"}
-                                                            width={50}
-                                                            height={50}
-                                                        />
-                                                    </div>
-                                                    <div className="ml-4">
-                                                        <h3 className="text-lg">
-                                                            {user?.firstName}{" "}
-                                                            {user?.lastName}
-                                                        </h3>
-                                                        {/* <p className="text-sm font-light text-gray-500">
-                                                            {user?.email}
-                                                        </p> */}
-                                                    </div>
-                                                    {unreadMessagesCount[
-                                                        user?.id
-                                                    ] > 0 && (
-                                                        <div className="ml-auto mx-10  bg-blue-400 rounded-xl px-2 text-sm text-white">
-                                                            {
-                                                                unreadMessagesCount[
-                                                                    user.id
-                                                                ]
-                                                            }
+                                                    <div
+                                                        className="cursor-pointer flex items-center px-2"
+                                                        onClick={() => {
+                                                            setChosenListOfItem(
+                                                                index
+                                                            );
+                                                            fetchMessages(
+                                                                conversationId,
+                                                                groupName,
+                                                                isGroup,
+                                                                users[0]
+                                                            );
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <Image
+                                                                className={`object-cover w-14 h-14 rounded-full ${
+                                                                    theme !==
+                                                                    "light"
+                                                                        ? "invert"
+                                                                        : ""
+                                                                }`}
+                                                                src={AvatarIcon}
+                                                                alt={
+                                                                    "AvatarIcon"
+                                                                }
+                                                                width={50}
+                                                                height={50}
+                                                            />
                                                         </div>
-                                                    )}
+                                                        <div className="ml-4">
+                                                            <h3 className="text-lg">
+                                                                {groupName}
+                                                            </h3>
+                                                            {/* <p className="text-sm font-light text-gray-500">
+                                                                {user?.email}
+                                                            </p> */}
+                                                        </div>
+                                                        {unreadGroupMessagesCount[
+                                                            conversationId
+                                                        ] > 0 && (
+                                                            <div className="ml-auto mx-10  bg-blue-400 rounded-xl px-2 text-sm text-white">
+                                                                {
+                                                                    unreadGroupMessagesCount[
+                                                                        conversationId
+                                                                    ]
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
+                                            );
+                                        } else {
+                                            return (
+                                                <div
+                                                    className={`py-6 border-b ${
+                                                        theme === "light"
+                                                            ? "border-b-gray-300"
+                                                            : "border-b-gray-700"
+                                                    } ${
+                                                        chosenListOfItem ===
+                                                        index
+                                                            ? `sm:shadow-sm sm:rounded-lg ${
+                                                                  theme ===
+                                                                  "light"
+                                                                      ? "sm:bg-light-options text-light-text"
+                                                                      : theme ===
+                                                                        "dark"
+                                                                      ? "sm:bg-dark-options text-dark-text"
+                                                                      : "sm:bg-trueDark-options text-trueDark-text"
+                                                              }`
+                                                            : ""
+                                                    }`}
+                                                    key={index}
+                                                >
+                                                    <div
+                                                        className="cursor-pointer flex items-center px-2"
+                                                        onClick={() => {
+                                                            setChosenListOfItem(
+                                                                index
+                                                            );
+                                                            fetchMessages(
+                                                                conversationId,
+                                                                groupName,
+                                                                isGroup,
+                                                                users[0]
+                                                            );
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <Image
+                                                                className="object-cover w-14 h-14 rounded-full"
+                                                                src={
+                                                                    users[0]
+                                                                        .profileImage
+                                                                        ? users[0]
+                                                                              .profileImage
+                                                                        : AvatarIcon
+                                                                }
+                                                                alt={
+                                                                    "AvatarIcon"
+                                                                }
+                                                                width={50}
+                                                                height={50}
+                                                            />
+                                                        </div>
+                                                        <div className="ml-4">
+                                                            <h3 className="text-lg">
+                                                                {
+                                                                    users[0]
+                                                                        ?.firstName
+                                                                }{" "}
+                                                                {
+                                                                    users[0]
+                                                                        ?.lastName
+                                                                }
+                                                            </h3>
+                                                            {/* <p className="text-sm font-light text-gray-500">
+                                                                {user?.email}
+                                                            </p> */}
+                                                        </div>
+                                                        {unreadMessagesCount[
+                                                            users[0]?.id
+                                                        ] > 0 && (
+                                                            <div className="ml-auto mx-10  bg-blue-400 rounded-xl px-2 text-sm text-white">
+                                                                {
+                                                                    unreadMessagesCount[
+                                                                        users[0]
+                                                                            .id
+                                                                    ]
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
                                     }
                                 )
                             ) : (

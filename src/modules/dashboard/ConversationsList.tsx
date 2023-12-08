@@ -7,8 +7,15 @@ import emojis from "@/public/assets/emojis.json";
 import { dashboardContext, primaryContext } from "@/src/context";
 import Index from "./settings";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAdd, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faAdd, faDownload, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { faTelegram } from "@fortawesome/free-brands-svg-icons";
+import Selector from "@/src/components/selector";
+
+/* define type of status start. */
+type formDatatype = {
+    groupName: string;
+    users: string[];
+};
 
 type ConversationListType = {
     socket: any;
@@ -20,7 +27,9 @@ type ConversationListType = {
     homePageForConversationListFlag: boolean;
     startConversation: (arg0: string) => void;
     backToMenuOption: () => void;
+    makeGroupFlag: boolean;
 };
+/* define type of status end. */
 const ConversationsList = ({
     socket,
     currentConversationUser,
@@ -31,15 +40,20 @@ const ConversationsList = ({
     homePageForConversationListFlag,
     startConversation,
     backToMenuOption,
+    makeGroupFlag,
 }: ConversationListType) => {
-    const { activeUsers } = useContext(primaryContext);
-    const { dashboardType, settingPage, adminUser, setAdminUser, theme } =
+    const { activeUsers, setNotificationData } = useContext(primaryContext);
+    const { dashboardType, adminUser, listOfAllUsers, theme } =
         useContext(dashboardContext);
     const [text, setText] = useState<string>("");
     const [emoji, setEmoji] = useState<string>("");
     const [showBackOption, setShowBackOption] = useState<boolean>(true);
     const [onlineFlag, setOnlineFlag] = useState<boolean>(false);
-
+    const [formData, setFormData] = useState<formDatatype>({
+        groupName: "",
+        users: [],
+    });
+    const [listForSelector, setListForSelector] = useState([]);
     /* ref hook variable declaration start. */
     const containerRef = useRef<any>(null);
     const fileInputRef = useRef<any>(null);
@@ -55,6 +69,15 @@ const ConversationsList = ({
         scrollToBottom();
     }, []);
 
+    useEffect(() => {
+        const listData = listOfAllUsers.map((userData: any) => ({
+            id: userData.user.id,
+            value: `${userData.user.email} (${
+                userData.user.firstName ? userData.user.firstName : ""
+            } ${userData.user.lastName ? userData.user.lastName : ""})`,
+        }));
+        setListForSelector(listData);
+    }, [listOfAllUsers]);
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -126,7 +149,6 @@ const ConversationsList = ({
             timeStamp: currentTime,
             receiverId: currentConversationUser?.user?.id,
         };
-        console.log(inputData);
 
         setMessages((prevData: any) => [
             ...prevData,
@@ -158,6 +180,40 @@ const ConversationsList = ({
             console.log("invalid inputs");
         }
     };
+
+    /* download chat image. */
+    const handleDownloadImage = (index: number) => {
+        const link = document.createElement("a");
+        link.href = messages[index].message;
+        link.download = `downloadedChatImage-${new Date().getTime()}.jpg`;
+        link.click();
+    };
+
+    const handleCreateGroupSubmitForm = async (e: any) => {
+        e.preventDefault();
+
+        const inputData = {
+            groupName: formData.groupName,
+            adminId: adminUser.id,
+            userIds: formData.users,
+        };
+        const res = await fetch("http://localhost:8000/api/createGroup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(inputData),
+        });
+        const result = await res.json();
+        setNotificationData((prevData: any) => ({
+            ...prevData,
+            type: result.type,
+            heading: result.heading,
+            message: result.message,
+            status: true,
+        }));
+    };
+
     return (
         <>
             {showBackOption && (
@@ -170,7 +226,68 @@ const ConversationsList = ({
             )}
             {/* user related content board. */}
             {dashboardType.user &&
-                (homePageForUserListFlag ? (
+                (makeGroupFlag ? (
+                    <div className="m-8 w-full h-full flex justify-center items-center">
+                        <form
+                            className={`w-[90%] max-h-[80%] mt-14 mb-0.5 rounded-lg shadow-lg ${
+                                theme === "light"
+                                    ? "bg-light-background text-light-text"
+                                    : theme === "dark"
+                                    ? "bg-dark-background text-dark-text"
+                                    : "bg-trueDark-background text-trueDark-text"
+                            }`}
+                            onSubmit={(e) => {
+                                handleCreateGroupSubmitForm(e);
+                            }}
+                        >
+                            <div className="m-8">
+                                <div className="flex flex-col md:flex-row  mb-2">
+                                    <div className="w-full flex justify-center">
+                                        <Input
+                                            label="Group Name"
+                                            name="groupName"
+                                            placeholder="Enter your group name"
+                                            isRequired={true}
+                                            value={formData.groupName}
+                                            onChange={(e: any) => {
+                                                setFormData(
+                                                    (prevData: any) => ({
+                                                        ...prevData,
+                                                        groupName:
+                                                            e.target.value,
+                                                    })
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-center">
+                                    <Selector
+                                        label="Choose Users"
+                                        name="ChooseUsers"
+                                        placeholder="Search User"
+                                        value={listForSelector}
+                                        setSelectedListData={setFormData}
+                                    />
+                                </div>
+                                <hr className="my-5" />
+                                <div className="flex flex-col md:flex-row mb-5">
+                                    <div className="w-full flex justify-center my-2 md:my-0">
+                                        <Button
+                                            label="Submit"
+                                            type="submit"
+                                            className={`w-full mx-2 bg-green-300 text-sm hover:text-white hover:bg-green-400 ${
+                                                theme !== "light"
+                                                    ? "text-black"
+                                                    : "text-white"
+                                            }`}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                ) : homePageForUserListFlag ? (
                     <div className="h-3/4 w-full flex flex-col justify-center">
                         <div className="text-center text-lg font-semibold px-5">
                             No conversation selected yet. Please choose user and
@@ -227,60 +344,94 @@ const ConversationsList = ({
                     {!homePageForConversationListFlag ? (
                         <>
                             {/* current chat user name and status. */}
-                            {currentConversationUser.user.firstName && (
-                                <div
-                                    className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5  rounded-full flex items-center px-2 md:px-6 ${
-                                        theme === "light"
-                                            ? "bg-light-background"
-                                            : theme === "dark"
-                                            ? "bg-dark-background"
-                                            : "bg-trueDark-background"
-                                    }`}
-                                >
-                                    <div className="cursor-pointer">
-                                        <Image
-                                            className="object-cover w-14 h-14 rounded-full"
-                                            src={
-                                                currentConversationUser.user
-                                                    .profileImage
-                                                    ? currentConversationUser
+                            {currentConversationUser.isGroup
+                                ? currentConversationUser.groupName && (
+                                      <div
+                                          className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5  rounded-full flex items-center px-2 md:px-6 ${
+                                              theme === "light"
+                                                  ? "bg-light-background"
+                                                  : theme === "dark"
+                                                  ? "bg-dark-background"
+                                                  : "bg-trueDark-background"
+                                          }`}
+                                      >
+                                          <div className="cursor-pointer">
+                                              <Image
+                                                  className={`object-cover w-14 h-14 rounded-full ${
+                                                      theme !== "light"
+                                                          ? "invert"
+                                                          : ""
+                                                  }`}
+                                                  src={AvatarIcon}
+                                                  alt={"AvatarIcon"}
+                                                  width={50}
+                                                  height={50}
+                                              />
+                                          </div>
+                                          <div className="ml-2 mr-auto">
+                                              <h3 className="text-lg">
+                                                  {
+                                                      currentConversationUser.groupName
+                                                  }
+                                              </h3>
+                                          </div>
+                                      </div>
+                                  )
+                                : currentConversationUser.user.firstName && (
+                                      <div
+                                          className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5  rounded-full flex items-center px-2 md:px-6 ${
+                                              theme === "light"
+                                                  ? "bg-light-background"
+                                                  : theme === "dark"
+                                                  ? "bg-dark-background"
+                                                  : "bg-trueDark-background"
+                                          }`}
+                                      >
+                                          <div className="cursor-pointer">
+                                              <Image
+                                                  className="object-cover w-14 h-14 rounded-full"
+                                                  src={
+                                                      currentConversationUser
                                                           .user.profileImage
-                                                    : AvatarIcon
-                                            }
-                                            alt={"AvatarIcon"}
-                                            width={50}
-                                            height={50}
-                                        />
-                                    </div>
-                                    <div className="ml-2 mr-auto">
-                                        <h3 className="text-lg">
-                                            {
-                                                currentConversationUser?.user
-                                                    ?.firstName
-                                            }{" "}
-                                            {
-                                                currentConversationUser?.user
-                                                    ?.lastName
-                                            }
-                                        </h3>
-                                        <p className="text-xs font-light text-gray-500">
-                                            {onlineFlag ? "Online" : ""}
-                                        </p>
-                                    </div>
-                                    <div className="cursor-pointer">
-                                        <FontAwesomeIcon
-                                            icon={faPhone}
-                                            style={{
-                                                color:
-                                                    theme! == "light"
-                                                        ? "#000"
-                                                        : "#fff",
-                                            }}
-                                            size="xl"
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                                                          ? currentConversationUser
+                                                                .user
+                                                                .profileImage
+                                                          : AvatarIcon
+                                                  }
+                                                  alt={"AvatarIcon"}
+                                                  width={50}
+                                                  height={50}
+                                              />
+                                          </div>
+                                          <div className="ml-2 mr-auto">
+                                              <h3 className="text-lg">
+                                                  {
+                                                      currentConversationUser
+                                                          ?.user?.firstName
+                                                  }{" "}
+                                                  {
+                                                      currentConversationUser
+                                                          ?.user?.lastName
+                                                  }
+                                              </h3>
+                                              <p className="text-xs font-light text-gray-500">
+                                                  {onlineFlag ? "Online" : ""}
+                                              </p>
+                                          </div>
+                                          <div className="cursor-pointer">
+                                              <FontAwesomeIcon
+                                                  icon={faPhone}
+                                                  style={{
+                                                      color:
+                                                          theme! == "light"
+                                                              ? "#000"
+                                                              : "#fff",
+                                                  }}
+                                                  size="xl"
+                                              />
+                                          </div>
+                                      </div>
+                                  )}
 
                             {/* message box. */}
                             {messages.length > 0 ? (
@@ -295,26 +446,55 @@ const ConversationsList = ({
                                                     message,
                                                     type,
                                                     timeStamp,
-                                                    user: { id },
+                                                    user: {
+                                                        id,
+                                                        firstName,
+                                                        lastName,
+                                                    },
                                                 }: {
                                                     message: any;
                                                     type: any;
                                                     timeStamp: any;
-                                                    user: { id: any };
+                                                    user: {
+                                                        id: any;
+                                                        firstName: string;
+                                                        lastName: string;
+                                                    };
                                                 },
                                                 index: number
                                             ) => {
                                                 return (
                                                     <div
                                                         key={index}
-                                                        className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 mb-6 ${
+                                                        className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 ${
                                                             id === adminUser?.id
                                                                 ? "ml-auto items-end"
                                                                 : "items-start"
                                                         }`}
                                                     >
+                                                        {currentConversationUser.isGroup &&
+                                                            id !==
+                                                                adminUser?.id && (
+                                                                <div
+                                                                    className={`${
+                                                                        theme ===
+                                                                        "light"
+                                                                            ? "text-gray-500"
+                                                                            : "text-gray-200"
+                                                                    }`}
+                                                                    style={{
+                                                                        fontSize:
+                                                                            "1.0rem",
+                                                                        lineHeight:
+                                                                            "1.95rem",
+                                                                    }}
+                                                                >
+                                                                    {firstName}{" "}
+                                                                    {lastName}
+                                                                </div>
+                                                            )}
                                                         <div
-                                                            className={`rounded-b-3xl p-4 ${
+                                                            className={`relative rounded-b-3xl p-4 group ${
                                                                 id ===
                                                                 adminUser?.id
                                                                     ? "bg-primary rounded-tl-3xl text-white"
@@ -332,17 +512,44 @@ const ConversationsList = ({
                                                             {type === "text" ? (
                                                                 message
                                                             ) : (
-                                                                <Image
-                                                                    className="object-cover w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72"
-                                                                    src={
-                                                                        message
-                                                                    }
-                                                                    width={100}
-                                                                    height={100}
-                                                                    alt={
-                                                                        "Image Message"
-                                                                    }
-                                                                />
+                                                                <>
+                                                                    <Image
+                                                                        className="object-cover w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-lg hover:scale-105 transition-all"
+                                                                        src={
+                                                                            message
+                                                                        }
+                                                                        width={
+                                                                            100
+                                                                        }
+                                                                        height={
+                                                                            100
+                                                                        }
+                                                                        alt={
+                                                                            "Image Message"
+                                                                        }
+                                                                    />
+                                                                    <div className="absolute right-5 top-5 flex justify-center items-center">
+                                                                        <FontAwesomeIcon
+                                                                            className={`hidden h-6 w-6 cursor-pointer group-hover:block ${
+                                                                                theme !==
+                                                                                "light"
+                                                                                    ? "group-hover:invert"
+                                                                                    : ""
+                                                                            }`}
+                                                                            icon={
+                                                                                faDownload
+                                                                            }
+                                                                            style={{
+                                                                                color: "rgb(255 85 99)",
+                                                                            }}
+                                                                            onClick={() => {
+                                                                                handleDownloadImage(
+                                                                                    index
+                                                                                );
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                </>
                                                             )}
                                                         </div>
                                                         <div
@@ -369,14 +576,21 @@ const ConversationsList = ({
                                 </div>
                             ) : (
                                 <div className="h-3/4 w-full flex flex-col justify-center">
-                                    <div className="text-center text-lg font-semibold px-5">
-                                        No Messages yet. say <b>Hi</b> and start
-                                        conversation with{" "}
-                                        {
-                                            currentConversationUser?.user
-                                                ?.firstName
-                                        }
-                                    </div>
+                                    {currentConversationUser.isGroup ? (
+                                        <div className="text-center text-lg font-semibold px-5">
+                                            No Messages yet. say <b>Hi</b> and
+                                            start conversation
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-lg font-semibold px-5">
+                                            No Messages yet. say <b>Hi</b> and
+                                            start conversation with{" "}
+                                            {
+                                                currentConversationUser?.user
+                                                    ?.firstName
+                                            }
+                                        </div>
+                                    )}
                                     <div className="text-center text-3xl mt-5">
                                         {emoji}
                                     </div>
