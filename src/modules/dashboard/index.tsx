@@ -16,6 +16,8 @@ import Loader from "@/public/assets/loader.gif";
 /* define type of status start. */
 type CurrentConversationUserType = {
     conversationId: string;
+    groupName: string;
+    isGroup: boolean;
     user: {
         id: string;
         email: string;
@@ -35,13 +37,15 @@ type NewUserDetailsType = {
 
 type ConversationsListType = {
     conversationId: string;
-    user: {
+    groupName: string;
+    isGroup: boolean;
+    users: {
         id: string;
         email: string;
         firstName: string;
         lastName: string;
         profileImage: string;
-    };
+    }[];
 }[];
 /* define type of status end. */
 
@@ -65,6 +69,8 @@ const Dashboard = () => {
         useState<boolean>(
             true
         ); /* home page for conversation list content side */
+
+    const [makeGroupFlag, setMakeGroupFlag] = useState<boolean>(false);
     const [menuSectionShowFlag, setMenuSectionShowFlag] =
         useState<boolean>(true); /* flag to show/hide menu section. */
     const [conversationSectionShowFlag, setConversationSectionShowFlag] =
@@ -73,9 +79,13 @@ const Dashboard = () => {
         []
     ); /* store current selected user's all message. */
     const [unreadMessagesCount, setUnreadMessagesCount] = useState<any>({});
+    const [unreadGroupMessagesCount, setUnreadGroupMessagesCount] =
+        useState<any>({});
     const [currentConversationUser, setCurrentConversationUser] =
         useState<CurrentConversationUserType>({
             conversationId: "",
+            groupName: "",
+            isGroup: false,
             user: { id: "", email: "", firstName: "", lastName: "" },
         }); /* store current user details with whom admin user is talking. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
@@ -90,13 +100,17 @@ const Dashboard = () => {
         useState<ConversationsListType>([
             {
                 conversationId: "",
-                user: {
-                    id: "",
-                    email: "",
-                    firstName: "",
-                    lastName: "",
-                    profileImage: "",
-                },
+                groupName: "",
+                isGroup: false,
+                users: [
+                    {
+                        id: "",
+                        email: "",
+                        firstName: "",
+                        lastName: "",
+                        profileImage: "",
+                    },
+                ],
             },
         ]);
     /* state variable declaration end. */
@@ -285,25 +299,49 @@ const Dashboard = () => {
         if (conversationsList) {
             setUnreadMessagesCount({});
             for (let conversationUser of conversationsListRef.current) {
-                if (
-                    conversationUser.conversationId &&
-                    conversationUser.user.id
-                ) {
-                    const res = await fetch(
-                        `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${conversationUser.user.id}`,
-                        {
-                            method: "GET",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
+                if (conversationUser.conversationId && conversationUser.users) {
+                    for (let user of conversationUser.users) {
+                        const res = await fetch(
+                            `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${user.id}`,
+                            {
+                                method: "GET",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                        );
+                        if (res.status === 200) {
+                            const result = await res.json();
+                            if (conversationUser.isGroup) {
+                                //conversation in group
+                                var currentTotalGroupMessage = 0;
+                                if (
+                                    unreadGroupMessagesCount[
+                                        conversationUser.conversationId
+                                    ]
+                                ) {
+                                    currentTotalGroupMessage =
+                                        unreadGroupMessagesCount[
+                                            conversationUser.conversationId
+                                        ];
+                                }
+
+                                setUnreadGroupMessagesCount(
+                                    (prevData: any) => ({
+                                        ...prevData,
+                                        [conversationUser.conversationId]:
+                                            currentTotalGroupMessage +
+                                            result.data.length,
+                                    })
+                                );
+                            } else {
+                                //conversation between two users
+                                setUnreadMessagesCount((prevData: any) => ({
+                                    ...prevData,
+                                    [user.id]: result.data.length,
+                                }));
+                            }
                         }
-                    );
-                    if (res.status === 200) {
-                        const result = await res.json();
-                        setUnreadMessagesCount((prevData: any) => ({
-                            ...prevData,
-                            [conversationUser.user.id]: result.data.length,
-                        }));
                     }
                 }
             }
@@ -336,9 +374,19 @@ const Dashboard = () => {
 
     /* fetching messages. */
     const fetchMessages = useCallback(
-        async (conversationId: string, user: any) => {
+        async (
+            conversationId: string,
+            groupName: string,
+            isGroup: boolean,
+            user: any
+        ) => {
             goToConversationSection();
-            setCurrentConversationUser({ conversationId, user });
+            setCurrentConversationUser({
+                conversationId,
+                groupName,
+                isGroup,
+                user,
+            });
             const res = await fetch(
                 `http://localhost:8000/api/message/${conversationId}/${user.id}`,
                 {
@@ -379,7 +427,15 @@ const Dashboard = () => {
     /* set user details to state variable newUserDetails */
     const fetchUser = useCallback(async (userId: string, user: any) => {
         setNewUserDetails({ userId, user });
+        setMakeGroupFlag(false);
         setHomePageForUserListFlag(false);
+        goToConversationSection();
+    }, []);
+
+    /* create chat group. */
+    const createNewGroup = useCallback(() => {
+        setHomePageForUserListFlag(false);
+        setMakeGroupFlag(true);
         goToConversationSection();
     }, []);
 
@@ -391,7 +447,6 @@ const Dashboard = () => {
                     senderId: adminUser.id,
                     receiverId: newUserId,
                 };
-
                 const allConversationsRes = await fetch(
                     "http://localhost:8000/api/conversations",
                     {
@@ -416,8 +471,10 @@ const Dashboard = () => {
                             lastName: "",
                         },
                     };
+
                     for (let conversation of allConversationsResult) {
                         if (
+                            !conversation.isGroup &&
                             conversation.members.includes(adminUser.id) &&
                             conversation.members.includes(newUserId)
                         ) {
@@ -466,6 +523,8 @@ const Dashboard = () => {
                     showListOfAllConversations();
                     fetchMessages(
                         workingData.conversationId,
+                        "",
+                        false,
                         workingData.receiverUser
                     );
                     setDashboardType((prevState: any) => ({
@@ -510,9 +569,13 @@ const Dashboard = () => {
                                         showListOfAllConversations
                                     }
                                     unreadMessagesCount={unreadMessagesCount}
+                                    unreadGroupMessagesCount={
+                                        unreadGroupMessagesCount
+                                    }
                                     goToConversationSection={
                                         goToConversationSection
                                     }
+                                    createNewGroup={createNewGroup}
                                 />
                             </div>
                         )}
@@ -542,6 +605,7 @@ const Dashboard = () => {
                                     }
                                     startConversation={startConversation}
                                     backToMenuOption={backToMenuOption}
+                                    makeGroupFlag={makeGroupFlag}
                                 />
                             </div>
                         )}
@@ -562,11 +626,13 @@ const Dashboard = () => {
         adminUser.id,
         conversationSectionShowFlag,
         conversationsList,
+        createNewGroup,
         currentConversationUser,
         fetchMessages,
         fetchUser,
         homePageForConversationListFlag,
         homePageForUserListFlag,
+        makeGroupFlag,
         menuSectionShowFlag,
         messages,
         newUserDetails,
@@ -574,6 +640,7 @@ const Dashboard = () => {
         socket,
         startConversation,
         theme,
+        unreadGroupMessagesCount,
         unreadMessagesCount,
     ]);
 

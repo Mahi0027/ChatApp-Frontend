@@ -28,6 +28,16 @@ type adminUserType = {
     status: string;
     theme: number;
 };
+
+export type ListOfAllUserType = {
+    user: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        profileImage: string;
+    };
+}[];
 /* define type of status end. */
 
 export default function Home() {
@@ -54,6 +64,19 @@ export default function Home() {
         status: "",
         theme: 0,
     }); /* admin user */
+
+    /* state variable declaration start. */
+    const [listOfAllUsers, setListOfAllUsers] = useState<ListOfAllUserType>([
+        {
+            user: {
+                id: "",
+                email: "",
+                firstName: "",
+                lastName: "",
+                profileImage: "",
+            },
+        },
+    ]); /* list of all users */
     const [theme, setTheme] = useState<string>("light");
     /* state variable declaration end. */
 
@@ -89,6 +112,8 @@ export default function Home() {
                             setSettingPage,
                             adminUser,
                             setAdminUser,
+                            listOfAllUsers,
+                            setListOfAllUsers,
                             theme,
                             toggleTheme,
                         }}
