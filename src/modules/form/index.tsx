@@ -31,7 +31,7 @@ function Form({ isSignInPage = true }) {
             }
         );
         const result = await res.json();
-        
+
         if (res.status === 200) {
             if (result.token) {
                 localStorage.setItem("user:token", result.token);
@@ -47,6 +47,8 @@ function Form({ isSignInPage = true }) {
             if (res.status === 200) {
                 router.push("/users/sign_in");
             }
+        }
+        if (!(isSignInPage && res.status === 200)) {
             setNotificationData((prevData: any) => ({
                 ...prevData,
                 type: result.type,

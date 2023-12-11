@@ -9,6 +9,7 @@ import {
     faComment,
     faComments,
     faHome,
+    faPeopleGroup,
     faUserAlt,
     faUserGroup,
     faUsers,
@@ -176,7 +177,11 @@ const MenuSection = ({
                 >
                     <div>
                         <Image
-                            className="object-cover w-16 h-16 rounded-full"
+                            className={`object-cover w-16 h-16 rounded-full ${
+                                theme !== "light" && !adminUser.profileImage
+                                    ? "invert"
+                                    : ""
+                            }`}
                             src={
                                 adminUser.profileImage
                                     ? adminUser.profileImage
@@ -344,7 +349,13 @@ const MenuSection = ({
                                                     >
                                                         <div>
                                                             <Image
-                                                                className="object-cover w-14 h-14 rounded-full"
+                                                                className={`object-cover w-14 h-14 rounded-full ${
+                                                                    theme !==
+                                                                        "light" &&
+                                                                    !user.profileImage
+                                                                        ? "invert"
+                                                                        : ""
+                                                                }`}
                                                                 src={
                                                                     user.profileImage
                                                                         ? user.profileImage
@@ -433,35 +444,36 @@ const MenuSection = ({
                                                                 conversationId,
                                                                 groupName,
                                                                 isGroup,
-                                                                users[0]
+                                                                users
                                                             );
                                                         }}
                                                     >
                                                         <div>
-                                                            <Image
-                                                                className={`object-cover w-14 h-14 rounded-full ${
-                                                                    theme !==
-                                                                    "light"
-                                                                        ? "invert"
-                                                                        : ""
-                                                                }`}
-                                                                src={AvatarIcon}
-                                                                alt={
-                                                                    "AvatarIcon"
+                                                            <FontAwesomeIcon
+                                                                className="w-12 h-12 mx-1"
+                                                                icon={
+                                                                    faPeopleGroup
                                                                 }
-                                                                width={50}
-                                                                height={50}
+                                                                style={{
+                                                                    color:
+                                                                        theme! ==
+                                                                        "light"
+                                                                            ? "#000"
+                                                                            : "#fff",
+                                                                }}
+                                                                size="xl"
                                                             />
                                                         </div>
                                                         <div className="ml-4">
                                                             <h3 className="text-lg">
                                                                 {groupName}
                                                             </h3>
-                                                            {/* <p className="text-sm font-light text-gray-500">
-                                                                {user?.email}
-                                                            </p> */}
                                                         </div>
-                                                        {unreadGroupMessagesCount[
+                                                        <div className="ml-auto text-sm text-white border border-orange-600 rounded-full px-1 bg-orange-600">
+                                                            Group
+                                                        </div>
+                                                        {/* I need to work on unread messages. */}
+                                                        {/* {unreadGroupMessagesCount[
                                                             conversationId
                                                         ] > 0 && (
                                                             <div className="ml-auto mx-10  bg-blue-400 rounded-xl px-2 text-sm text-white">
@@ -471,7 +483,7 @@ const MenuSection = ({
                                                                     ]
                                                                 }
                                                             </div>
-                                                        )}
+                                                        )} */}
                                                     </div>
                                                 </div>
                                             );
@@ -508,13 +520,18 @@ const MenuSection = ({
                                                                 conversationId,
                                                                 groupName,
                                                                 isGroup,
-                                                                users[0]
+                                                                users
                                                             );
                                                         }}
                                                     >
                                                         <div>
                                                             <Image
-                                                                className="object-cover w-14 h-14 rounded-full"
+                                                                className={`object-cover w-14 h-14 rounded-full ${
+                                                                    theme !==
+                                                                        "light" &&
+                                                                    !users[0]
+                                                                        .profileImage
+                                                                 ? 'invert':''}`}
                                                                 src={
                                                                     users[0]
                                                                         .profileImage
