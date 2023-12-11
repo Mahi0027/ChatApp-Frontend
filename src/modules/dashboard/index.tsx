@@ -18,12 +18,12 @@ type CurrentConversationUserType = {
     conversationId: string;
     groupName: string;
     isGroup: boolean;
-    user: {
+    users: {
         id: string;
         email: string;
         firstName: string;
         lastName: string;
-    };
+    }[];
 };
 
 type NewUserDetailsType = {
@@ -86,7 +86,7 @@ const Dashboard = () => {
             conversationId: "",
             groupName: "",
             isGroup: false,
-            user: { id: "", email: "", firstName: "", lastName: "" },
+            users: [{ id: "", email: "", firstName: "", lastName: "" }],
         }); /* store current user details with whom admin user is talking. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
@@ -225,14 +225,14 @@ const Dashboard = () => {
                 "getMessage",
                 async ({
                     conversationId,
-                    senderId,
+                    senderDetail,
                     message,
                     type,
                     timeStamp,
                     receiver,
                 }: {
                     conversationId: String;
-                    senderId: String;
+                    senderDetail: any;
                     message: String;
                     type: String;
                     timeStamp: String;
@@ -242,16 +242,12 @@ const Dashboard = () => {
                         ...prevData,
                         {
                             user: {
-                                id: currentConversationUserRef.current.user.id,
-                                email: currentConversationUserRef.current.user
-                                    .email,
-                                firstName:
-                                    currentConversationUserRef.current.user
-                                        .firstName,
-                                lastName:
-                                    currentConversationUserRef.current.user
-                                        .lastName,
+                                id: senderDetail.id,
+                                email: senderDetail.email,
+                                firstName: senderDetail.firstName,
+                                lastName: senderDetail.lastName,
                             },
+                            conversationId: conversationId,
                             message: message,
                             timeStamp: timeStamp,
                             type: type,
@@ -259,23 +255,38 @@ const Dashboard = () => {
                     ]);
 
                     /* if sender and receiver and page is open of sender so make message as read. */
-                    if (
-                        receiver.userId === adminUser.id &&
-                        senderId === currentConversationUserRef.current.user.id
-                    ) {
-                        const res = await fetch(
-                            `http://localhost:8000/api/messageReadUpdate/${conversationId}/${senderId}`,
-                            {
-                                method: "GET",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
+                    for (let user of currentConversationUserRef.current.users) {
+                        if (
+                            receiver.userId === adminUser.id &&
+                            senderDetail._id === user.id
+                        ) {
+                            const res = await fetch(
+                                `http://localhost:8000/api/messageReadUpdate/${conversationId}/${user.id}`,
+                                {
+                                    method: "GET",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                }
+                            );
+                            if (res.status === 200) {
+                                const result = await res.json();
                             }
-                        );
-                        if (res.status === 200) {
-                            const result = await res.json();
+                            break;
                         }
                     }
+
+                    const res = await fetch(
+                        `http://localhost:8000/api/conversations/${adminUser.id} `,
+                        {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+                    const conversationResult = await res.json();
+                    setConversationsList(conversationResult);
                     countUnreadMessages();
                 }
             );
@@ -298,6 +309,7 @@ const Dashboard = () => {
     const countUnreadMessages = useCallback(async () => {
         if (conversationsList) {
             setUnreadMessagesCount({});
+            setUnreadGroupMessagesCount({});
             for (let conversationUser of conversationsListRef.current) {
                 if (conversationUser.conversationId && conversationUser.users) {
                     for (let user of conversationUser.users) {
@@ -378,17 +390,17 @@ const Dashboard = () => {
             conversationId: string,
             groupName: string,
             isGroup: boolean,
-            user: any
+            users: any
         ) => {
             goToConversationSection();
             setCurrentConversationUser({
                 conversationId,
                 groupName,
                 isGroup,
-                user,
+                users,
             });
             const res = await fetch(
-                `http://localhost:8000/api/message/${conversationId}/${user.id}`,
+                `http://localhost:8000/api/message/${conversationId}/${users[0].id}`,
                 {
                     method: "GET",
                     headers: {
@@ -521,12 +533,9 @@ const Dashboard = () => {
                             receiverUserData.firstName;
                     }
                     showListOfAllConversations();
-                    fetchMessages(
-                        workingData.conversationId,
-                        "",
-                        false,
-                        workingData.receiverUser
-                    );
+                    fetchMessages(workingData.conversationId, "", false, [
+                        workingData.receiverUser,
+                    ]);
                     setDashboardType((prevState: any) => ({
                         ...prevState,
                         chat: true,

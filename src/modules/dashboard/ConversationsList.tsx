@@ -7,7 +7,12 @@ import emojis from "@/public/assets/emojis.json";
 import { dashboardContext, primaryContext } from "@/src/context";
 import Index from "./settings";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAdd, faDownload, faPhone } from "@fortawesome/free-solid-svg-icons";
+import {
+    faAdd,
+    faDownload,
+    faPeopleGroup,
+    faPhone,
+} from "@fortawesome/free-solid-svg-icons";
 import { faTelegram } from "@fortawesome/free-brands-svg-icons";
 import Selector from "@/src/components/selector";
 
@@ -85,14 +90,15 @@ const ConversationsList = ({
     useEffect(() => {
         var foundOnlineFlag = false;
 
+        /* This active status flag is specific for individual conversation. */
         for (let activeUser of activeUsers) {
-            if (activeUser.userId === currentConversationUser.user.id) {
+            if (activeUser.userId === currentConversationUser.users[0].id) {
                 setOnlineFlag(true);
                 foundOnlineFlag = true;
             }
         }
         if (!foundOnlineFlag) setOnlineFlag(false);
-    }, [activeUsers, currentConversationUser.user.id]);
+    }, [activeUsers, currentConversationUser]);
     // Function to scroll to the bottom of the container
 
     /* for sending image */
@@ -133,7 +139,12 @@ const ConversationsList = ({
     };
 
     /* send message */
-    const sendMessage = async (type = "text", data = "") => {
+    const sendMessage = async (
+        type = "text",
+        data = "",
+        isGroup = false,
+        receiversId = []
+    ) => {
         const currentTime = new Date().toLocaleString("en-US", {
             year: "numeric",
             month: "short",
@@ -141,13 +152,16 @@ const ConversationsList = ({
             hour: "2-digit",
             minute: "2-digit",
         });
+        const receivers = currentConversationUser.users.map(
+            (user: any) => user.id
+        );
         const inputData = {
-            conversationId: currentConversationUser?.conversationId,
-            senderId: adminUser?.id,
+            conversationId: currentConversationUser.conversationId,
+            senderId: adminUser.id,
             message: type === "image" ? data : text,
             type: type,
             timeStamp: currentTime,
-            receiverId: currentConversationUser?.user?.id,
+            receiverIds: receivers,
         };
 
         setMessages((prevData: any) => [
@@ -159,6 +173,7 @@ const ConversationsList = ({
                     firstName: adminUser.firstName,
                     lastName: adminUser.lastName,
                 },
+                conversationId: currentConversationUser.conversationId,
                 message: type === "image" ? data : text,
                 timeStamp: currentTime,
                 type: type,
@@ -300,7 +315,12 @@ const ConversationsList = ({
                         <div className="text-center">
                             <div className="flex flex-col justify-center items-center m-10">
                                 <Image
-                                    className="object-cover w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 rounded-full"
+                                    className={`object-cover w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 rounded-full ${
+                                        theme !== "light" &&
+                                        !newUserDetails.user.profileImage
+                                            ? "invert"
+                                            : ""
+                                    }`}
                                     src={
                                         newUserDetails.user.profileImage
                                             ? newUserDetails.user.profileImage
@@ -356,16 +376,16 @@ const ConversationsList = ({
                                           }`}
                                       >
                                           <div className="cursor-pointer">
-                                              <Image
-                                                  className={`object-cover w-14 h-14 rounded-full ${
-                                                      theme !== "light"
-                                                          ? "invert"
-                                                          : ""
-                                                  }`}
-                                                  src={AvatarIcon}
-                                                  alt={"AvatarIcon"}
-                                                  width={50}
-                                                  height={50}
+                                              <FontAwesomeIcon
+                                                  className="w-12 h-12 mx-1"
+                                                  icon={faPeopleGroup}
+                                                  style={{
+                                                      color:
+                                                          theme! == "light"
+                                                              ? "#000"
+                                                              : "#fff",
+                                                  }}
+                                                  size="xl"
                                               />
                                           </div>
                                           <div className="ml-2 mr-auto">
@@ -377,7 +397,8 @@ const ConversationsList = ({
                                           </div>
                                       </div>
                                   )
-                                : currentConversationUser.user.firstName && (
+                                : currentConversationUser.users[0]
+                                      .firstName && (
                                       <div
                                           className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5  rounded-full flex items-center px-2 md:px-6 ${
                                               theme === "light"
@@ -389,12 +410,18 @@ const ConversationsList = ({
                                       >
                                           <div className="cursor-pointer">
                                               <Image
-                                                  className="object-cover w-14 h-14 rounded-full"
+                                                  className={`object-cover w-14 h-14 rounded-full ${
+                                                      theme !== "light" &&
+                                                      !currentConversationUser
+                                                          .users[0].profileImage
+                                                          ? "invert"
+                                                          : ""
+                                                  }`}
                                                   src={
                                                       currentConversationUser
-                                                          .user.profileImage
+                                                          .users[0].profileImage
                                                           ? currentConversationUser
-                                                                .user
+                                                                .users[0]
                                                                 .profileImage
                                                           : AvatarIcon
                                                   }
@@ -407,11 +434,11 @@ const ConversationsList = ({
                                               <h3 className="text-lg">
                                                   {
                                                       currentConversationUser
-                                                          ?.user?.firstName
+                                                          ?.users[0]?.firstName
                                                   }{" "}
                                                   {
                                                       currentConversationUser
-                                                          ?.user?.lastName
+                                                          ?.users[0]?.lastName
                                                   }
                                               </h3>
                                               <p className="text-xs font-light text-gray-500">
@@ -436,13 +463,14 @@ const ConversationsList = ({
                             {/* message box. */}
                             {messages.length > 0 ? (
                                 <div
-                                    className="h-3/4 w-full overflow-y-auto scroll-smooth"
+                                    className="h-4/5 w-full overflow-y-auto scroll-smooth"
                                     ref={containerRef}
                                 >
                                     <div className="p-2 sm:p-5 md:p-10">
                                         {messages.map(
                                             (
                                                 {
+                                                    conversationId,
                                                     message,
                                                     type,
                                                     timeStamp,
@@ -452,6 +480,7 @@ const ConversationsList = ({
                                                         lastName,
                                                     },
                                                 }: {
+                                                    conversationId: any;
                                                     message: any;
                                                     type: any;
                                                     timeStamp: any;
@@ -464,111 +493,124 @@ const ConversationsList = ({
                                                 index: number
                                             ) => {
                                                 return (
-                                                    <div
-                                                        key={index}
-                                                        className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 ${
-                                                            id === adminUser?.id
-                                                                ? "ml-auto items-end"
-                                                                : "items-start"
-                                                        }`}
-                                                    >
-                                                        {currentConversationUser.isGroup &&
-                                                            id !==
-                                                                adminUser?.id && (
-                                                                <div
-                                                                    className={`${
-                                                                        theme ===
-                                                                        "light"
-                                                                            ? "text-gray-500"
-                                                                            : "text-gray-200"
-                                                                    }`}
-                                                                    style={{
-                                                                        fontSize:
-                                                                            "1.0rem",
-                                                                        lineHeight:
-                                                                            "1.95rem",
-                                                                    }}
-                                                                >
-                                                                    {firstName}{" "}
-                                                                    {lastName}
-                                                                </div>
-                                                            )}
+                                                    /* message area. */
+                                                    currentConversationUser.conversationId ===
+                                                        conversationId && (
                                                         <div
-                                                            className={`relative rounded-b-3xl p-4 group ${
+                                                            key={index}
+                                                            className={`max-w-[90%] sm:max-w-[60%] md:max-w-[40%] flex flex-col p-4 ${
                                                                 id ===
-                                                                adminUser?.id
-                                                                    ? "bg-primary rounded-tl-3xl text-white"
-                                                                    : `rounded-tr-3xl ${
-                                                                          theme ===
-                                                                          "light"
-                                                                              ? "bg-light-background"
-                                                                              : theme ===
-                                                                                "dark"
-                                                                              ? "bg-dark-background"
-                                                                              : "bg-trueDark-background"
-                                                                      }`
+                                                                adminUser.id
+                                                                    ? "ml-auto items-end"
+                                                                    : "items-start"
                                                             }`}
                                                         >
-                                                            {type === "text" ? (
-                                                                message
-                                                            ) : (
-                                                                <>
-                                                                    <Image
-                                                                        className="object-cover w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-lg hover:scale-105 transition-all"
-                                                                        src={
-                                                                            message
+                                                            {/* in group, message username */}
+                                                            {currentConversationUser.isGroup &&
+                                                                id !==
+                                                                    adminUser.id && (
+                                                                    <div
+                                                                        className={`${
+                                                                            theme ===
+                                                                            "light"
+                                                                                ? "text-gray-500"
+                                                                                : "text-gray-200"
+                                                                        }`}
+                                                                        style={{
+                                                                            fontSize:
+                                                                                "1.0rem",
+                                                                            lineHeight:
+                                                                                "1.95rem",
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            firstName
+                                                                        }{" "}
+                                                                        {
+                                                                            lastName
                                                                         }
-                                                                        width={
-                                                                            100
-                                                                        }
-                                                                        height={
-                                                                            100
-                                                                        }
-                                                                        alt={
-                                                                            "Image Message"
-                                                                        }
-                                                                    />
-                                                                    <div className="absolute right-5 top-5 flex justify-center items-center">
-                                                                        <FontAwesomeIcon
-                                                                            className={`hidden h-6 w-6 cursor-pointer group-hover:block ${
-                                                                                theme !==
-                                                                                "light"
-                                                                                    ? "group-hover:invert"
-                                                                                    : ""
-                                                                            }`}
-                                                                            icon={
-                                                                                faDownload
-                                                                            }
-                                                                            style={{
-                                                                                color: "rgb(255 85 99)",
-                                                                            }}
-                                                                            onClick={() => {
-                                                                                handleDownloadImage(
-                                                                                    index
-                                                                                );
-                                                                            }}
-                                                                        />
                                                                     </div>
-                                                                </>
-                                                            )}
+                                                                )}
+                                                            <div
+                                                                className={`relative rounded-b-3xl p-4 group ${
+                                                                    id ===
+                                                                    adminUser.id
+                                                                        ? "bg-primary rounded-tl-3xl text-white"
+                                                                        : `rounded-tr-3xl ${
+                                                                              theme ===
+                                                                              "light"
+                                                                                  ? "bg-light-background"
+                                                                                  : theme ===
+                                                                                    "dark"
+                                                                                  ? "bg-dark-background"
+                                                                                  : "bg-trueDark-background"
+                                                                          }`
+                                                                }`}
+                                                            >
+                                                                {/* message or media */}
+                                                                {type ===
+                                                                "text" ? (
+                                                                    message
+                                                                ) : (
+                                                                    <>
+                                                                        <Image
+                                                                            className="object-cover w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-lg hover:scale-105 transition-all"
+                                                                            src={
+                                                                                message
+                                                                            }
+                                                                            width={
+                                                                                100
+                                                                            }
+                                                                            height={
+                                                                                100
+                                                                            }
+                                                                            alt={
+                                                                                "Image Message"
+                                                                            }
+                                                                        />
+                                                                        <div className="absolute right-5 top-5 flex justify-center items-center">
+                                                                            <FontAwesomeIcon
+                                                                                className={`hidden h-6 w-6 cursor-pointer group-hover:block ${
+                                                                                    theme !==
+                                                                                    "light"
+                                                                                        ? "group-hover:invert"
+                                                                                        : ""
+                                                                                }`}
+                                                                                icon={
+                                                                                    faDownload
+                                                                                }
+                                                                                style={{
+                                                                                    color: "rgb(255 85 99)",
+                                                                                }}
+                                                                                onClick={() => {
+                                                                                    handleDownloadImage(
+                                                                                        index
+                                                                                    );
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            {/* message timestamp */}
+                                                            <div
+                                                                className={`${
+                                                                    theme ===
+                                                                    "light"
+                                                                        ? "text-gray-500"
+                                                                        : "text-gray-200"
+                                                                }`}
+                                                                style={{
+                                                                    fontSize:
+                                                                        "0.60rem",
+                                                                    lineHeight:
+                                                                        "1.25rem",
+                                                                }}
+                                                            >
+                                                                {timeStamp}
+                                                            </div>
                                                         </div>
-                                                        <div
-                                                            className={`${
-                                                                theme ===
-                                                                "light"
-                                                                    ? "text-gray-500"
-                                                                    : "text-gray-200"
-                                                            }`}
-                                                            style={{
-                                                                fontSize:
-                                                                    "0.60rem",
-                                                                lineHeight:
-                                                                    "1.25rem",
-                                                            }}
-                                                        >
-                                                            {timeStamp}
-                                                        </div>
-                                                    </div>
+                                                    )
                                                 );
                                             }
                                         )}
@@ -586,8 +628,8 @@ const ConversationsList = ({
                                             No Messages yet. say <b>Hi</b> and
                                             start conversation with{" "}
                                             {
-                                                currentConversationUser?.user
-                                                    ?.firstName
+                                                currentConversationUser.users[0]
+                                                    .firstName
                                             }
                                         </div>
                                     )}
@@ -597,56 +639,60 @@ const ConversationsList = ({
                                 </div>
                             )}
                             {/* texting area. */}
-                            {currentConversationUser.user.firstName && (
-                                <div className="p-4 sm:p-6 md:p-8 w-full flex items-center">
-                                    <Input
-                                        placeholder="Type a message..."
-                                        className="w-full"
-                                        inputClassName="p-2 rounded-xl border-0 shadow-lg rounded-full bg-secondary text-gray-900 focus:ring-0 focus:border-0 outline-none"
-                                        value={text}
-                                        onChange={(e) =>
-                                            setText(e.target.value)
+                            <div className="p-2 w-full flex items-center">
+                                <Input
+                                    placeholder="Type a message..."
+                                    className="w-full"
+                                    inputClassName="rounded-xl border-0 shadow-lg rounded-full bg-secondary text-lg font-semibold text-gray-900 focus:ring-0 focus:border-0 outline-none"
+                                    value={text}
+                                    onChange={(e) => setText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && text) {
+                                            e.preventDefault();
+                                            sendMessage();
                                         }
+                                    }}
+                                />
+                                <div
+                                    className={`ml-2 sm:ml-3 lg:ml-4 sm:p-1 lg:p-2 cursor-pointer ${
+                                        !text && "pointer-events-none"
+                                    }`}
+                                    onClick={() => sendMessage()}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={faTelegram}
+                                        style={{
+                                            color:
+                                                theme! == "light"
+                                                    ? "#000"
+                                                    : "#fff",
+                                        }}
+                                        size="3x"
                                     />
-                                    <div
-                                        className={`ml-4 p-2 cursor-pointer ${
-                                            !text && "pointer-events-none"
-                                        }`}
-                                        onClick={() => sendMessage()}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={faTelegram}
-                                            style={{
-                                                color:
-                                                    theme! == "light"
-                                                        ? "#000"
-                                                        : "#fff",
-                                            }}
-                                            size="2x"
-                                        />
-                                    </div>
-                                    <div className={`ml-4 p-2 cursor-pointer`}>
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            style={{ display: "none" }}
-                                            accept=".jpg, .jpeg, .png"
-                                            onChange={handleImageInputChange}
-                                        />
-                                        <FontAwesomeIcon
-                                            icon={faAdd}
-                                            style={{
-                                                color:
-                                                    theme! == "light"
-                                                        ? "#000"
-                                                        : "#fff",
-                                            }}
-                                            size="2x"
-                                            onClick={handleEditClick}
-                                        />
-                                    </div>
                                 </div>
-                            )}
+                                <div
+                                    className={`ml-2 sm:ml-3 lg:ml-4 sm:p-1 lg:p-2 cursor-pointer`}
+                                >
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        style={{ display: "none" }}
+                                        accept=".jpg, .jpeg, .png"
+                                        onChange={handleImageInputChange}
+                                    />
+                                    <FontAwesomeIcon
+                                        icon={faAdd}
+                                        style={{
+                                            color:
+                                                theme! == "light"
+                                                    ? "#000"
+                                                    : "#fff",
+                                        }}
+                                        size="3x"
+                                        onClick={handleEditClick}
+                                    />
+                                </div>
+                            </div>
                         </>
                     ) : (
                         <>

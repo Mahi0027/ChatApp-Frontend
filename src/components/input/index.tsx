@@ -15,9 +15,12 @@ const Input = ({
     onChange = (e: any) => {
         return;
     },
+    onKeyDown = (e: any) => {
+        return;
+    }
 }) => {
     const { theme } = useContext(dashboardContext);
-    
+
     return (
         <div className={`w-5/6 ${className}`}>
             <label
@@ -33,7 +36,7 @@ const Input = ({
                     theme !== undefined && theme !== "light"
                         ? "bg-gray-700  text-gray-100 border-gray-500"
                         : "bg-gray-50 text-gray-900 border-gray-300"
-                } border text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                } border rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
                     isTextArea ? "resize-y" : ""
                 } dark:placeholder-gray-400 dark:focus:ring-blue-50 dark:focus:border-blue-500 ${
                     disabled ? "bg-gray-300 border-gray-500" : ""
@@ -42,6 +45,7 @@ const Input = ({
                 required={isRequired}
                 value={value}
                 onChange={onChange}
+                onKeyDown={onKeyDown}
                 style={isTextArea ? { height: "auto" } : {}}
                 disabled={disabled}
             />
