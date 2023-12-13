@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faTelegram } from "@fortawesome/free-brands-svg-icons";
 import Selector from "@/src/components/selector";
+import Modal from "@/src/components/modal";
 
 /* define type of status start. */
 type formDatatype = {
@@ -59,6 +60,8 @@ const ConversationsList = ({
         users: [],
     });
     const [listForSelector, setListForSelector] = useState([]);
+    const [showProfileFlag, setShowProfileFlag] = useState(false);
+    const [detailsForModal, setDetailsForModal] = useState<any>({});
     /* ref hook variable declaration start. */
     const containerRef = useRef<any>(null);
     const fileInputRef = useRef<any>(null);
@@ -229,8 +232,19 @@ const ConversationsList = ({
         }));
     };
 
+    const openModal = () => {
+        setShowProfileFlag(true);
+        setDetailsForModal(currentConversationUser);
+    };
+
     return (
         <>
+            <Modal
+                showProfileFlag={showProfileFlag}
+                theme={theme}
+                setShowProfileFlag={setShowProfileFlag}
+                detailsForModal={detailsForModal}
+            />
             {showBackOption && (
                 <div
                     className="fixed top-0 left-5 font-bold text-5xl cursor-pointer"
@@ -375,7 +389,10 @@ const ConversationsList = ({
                                                   : "bg-trueDark-background"
                                           }`}
                                       >
-                                          <div className="cursor-pointer">
+                                          <div
+                                              className="cursor-pointer"
+                                              onClick={openModal}
+                                          >
                                               <FontAwesomeIcon
                                                   className="w-12 h-12 mx-1"
                                                   icon={faPeopleGroup}
@@ -388,7 +405,10 @@ const ConversationsList = ({
                                                   size="xl"
                                               />
                                           </div>
-                                          <div className="ml-2 mr-auto">
+                                          <div
+                                              className="ml-2 mr-auto cursor-pointer"
+                                              onClick={openModal}
+                                          >
                                               <h3 className="text-lg">
                                                   {
                                                       currentConversationUser.groupName
@@ -408,7 +428,10 @@ const ConversationsList = ({
                                                   : "bg-trueDark-background"
                                           }`}
                                       >
-                                          <div className="cursor-pointer">
+                                          <div
+                                              className="cursor-pointer"
+                                              onClick={openModal}
+                                          >
                                               <Image
                                                   className={`object-cover w-14 h-14 rounded-full ${
                                                       theme !== "light" &&
@@ -430,7 +453,10 @@ const ConversationsList = ({
                                                   height={50}
                                               />
                                           </div>
-                                          <div className="ml-2 mr-auto">
+                                          <div
+                                              className="ml-2 mr-auto cursor-pointer"
+                                              onClick={openModal}
+                                          >
                                               <h3 className="text-lg">
                                                   {
                                                       currentConversationUser

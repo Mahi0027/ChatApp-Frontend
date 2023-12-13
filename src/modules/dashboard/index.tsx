@@ -23,6 +23,7 @@ type CurrentConversationUserType = {
         email: string;
         firstName: string;
         lastName: string;
+        status: string;
     }[];
 };
 
@@ -45,6 +46,7 @@ type ConversationsListType = {
         firstName: string;
         lastName: string;
         profileImage: string;
+        status: string;
     }[];
 }[];
 /* define type of status end. */
@@ -86,7 +88,9 @@ const Dashboard = () => {
             conversationId: "",
             groupName: "",
             isGroup: false,
-            users: [{ id: "", email: "", firstName: "", lastName: "" }],
+            users: [
+                { id: "", email: "", firstName: "", lastName: "", status: "" },
+            ],
         }); /* store current user details with whom admin user is talking. */
     const [newUserDetails, setNewUserDetails] = useState<NewUserDetailsType>({
         userId: "",
@@ -109,6 +113,7 @@ const Dashboard = () => {
                         firstName: "",
                         lastName: "",
                         profileImage: "",
+                        status: "",
                     },
                 ],
             },
