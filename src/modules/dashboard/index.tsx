@@ -207,7 +207,7 @@ const Dashboard = () => {
     useEffect(() => {
         /* create socket user */
         if (adminUser.id && adminUser.id !== "") {
-            setSocket(io("http://localhost:8080"));
+            setSocket(io("https://buddy-chat-3bc1c1b1c986.herokuapp.com/"));
             showListOfAllConversations();
         }
     }, [adminUser.id, showListOfAllConversations]);
