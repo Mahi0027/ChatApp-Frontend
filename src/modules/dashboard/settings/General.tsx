@@ -23,7 +23,7 @@ const General = () => {
             email: adminUser.email,
             theme: themeValue,
         };
-        const res = await fetch("http://localhost:8000/api/userThemeUpdate", {
+        const res = await fetch("https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/userThemeUpdate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
