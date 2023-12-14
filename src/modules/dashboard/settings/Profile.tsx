@@ -47,7 +47,7 @@ const Profile = () => {
     /* get admin user details. */
     const getAdminUser = async () => {
         const res = await fetch(
-            `http://localhost:8000/api/user/${adminUser.id}`,
+            `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/user/${adminUser.id}`,
             {
                 method: "GET",
                 headers: {
@@ -105,7 +105,7 @@ const Profile = () => {
 
     const handleSubmitForm = async (e: any) => {
         e.preventDefault();
-        const res = await fetch("http://localhost:8000/api/userUpdate", {
+        const res = await fetch("https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/userUpdate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

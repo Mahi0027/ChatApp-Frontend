@@ -21,7 +21,7 @@ function Form({ isSignInPage = true }) {
         e.preventDefault();
 
         const res = await fetch(
-            `http://localhost:8000/api/${isSignInPage ? "login" : "register"}`,
+            `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/${isSignInPage ? "login" : "register"}`,
             {
                 method: "POST",
                 headers: {

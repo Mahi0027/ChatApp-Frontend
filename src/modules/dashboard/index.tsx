@@ -187,7 +187,7 @@ const Dashboard = () => {
             loggedUserId = (loggedInUser?.id as string) || "";
         }
         const res = await fetch(
-            `http://localhost:8000/api/conversations/${loggedUserId} `,
+            `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/conversations/${loggedUserId} `,
             {
                 method: "GET",
                 headers: {
@@ -266,7 +266,7 @@ const Dashboard = () => {
                             senderDetail._id === user.id
                         ) {
                             const res = await fetch(
-                                `http://localhost:8000/api/messageReadUpdate/${conversationId}/${user.id}`,
+                                `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/messageReadUpdate/${conversationId}/${user.id}`,
                                 {
                                     method: "GET",
                                     headers: {
@@ -282,7 +282,7 @@ const Dashboard = () => {
                     }
 
                     const res = await fetch(
-                        `http://localhost:8000/api/conversations/${adminUser.id} `,
+                        `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/conversations/${adminUser.id} `,
                         {
                             method: "GET",
                             headers: {
@@ -319,7 +319,7 @@ const Dashboard = () => {
                 if (conversationUser.conversationId && conversationUser.users) {
                     for (let user of conversationUser.users) {
                         const res = await fetch(
-                            `http://localhost:8000/api/unreadMessagesCount/${conversationUser.conversationId}/${user.id}`,
+                            `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/unreadMessagesCount/${conversationUser.conversationId}/${user.id}`,
                             {
                                 method: "GET",
                                 headers: {
@@ -405,7 +405,7 @@ const Dashboard = () => {
                 users,
             });
             const res = await fetch(
-                `http://localhost:8000/api/message/${conversationId}/${users[0].id}`,
+                `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/message/${conversationId}/${users[0].id}`,
                 {
                     method: "GET",
                     headers: {
@@ -424,7 +424,7 @@ const Dashboard = () => {
     const getAdminUserDetail = useCallback(async (userId: string) => {
         try {
             const res = await fetch(
-                `http://localhost:8000/api/user/${userId}`,
+                `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/user/${userId}`,
                 {
                     method: "GET",
                     headers: {
@@ -465,7 +465,7 @@ const Dashboard = () => {
                     receiverId: newUserId,
                 };
                 const allConversationsRes = await fetch(
-                    "http://localhost:8000/api/conversations",
+                    "https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/conversations",
                     {
                         method: "GET",
                         headers: {
@@ -504,7 +504,7 @@ const Dashboard = () => {
                     // if we don't find the conversation then create new conversation between them.
                     if (!workingData.findConversationFlag) {
                         const res = await fetch(
-                            "http://localhost:8000/api/conversation",
+                            "https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/conversation",
                             {
                                 method: "POST",
                                 headers: {
@@ -521,7 +521,7 @@ const Dashboard = () => {
                     }
 
                     const receiverUserRes = await fetch(
-                        `http://localhost:8000/api/user/${newUserId}`,
+                        `https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/user/${newUserId}`,
                         {
                             method: "GET",
                             headers: {

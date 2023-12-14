@@ -185,7 +185,7 @@ const ConversationsList = ({
 
         socket?.emit("sendMessage", inputData);
         setText("");
-        const res = await fetch("http://localhost:8000/api/message", {
+        const res = await fetch("https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/message", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -215,7 +215,7 @@ const ConversationsList = ({
             adminId: adminUser.id,
             userIds: formData.users,
         };
-        const res = await fetch("http://localhost:8000/api/createGroup", {
+        const res = await fetch("https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/createGroup", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -117,7 +117,7 @@ const MenuSection = ({
 
     /* show list of all users */
     const showListOfAllUser = async () => {
-        const res = await fetch("http://localhost:8000/api/users", {
+        const res = await fetch("https://buddy-chat-3bc1c1b1c986.herokuapp.com/api/users", {
             method: "GET",
             headers: {
                 Content_Type: "application/json",
@@ -531,7 +531,9 @@ const MenuSection = ({
                                                                         "light" &&
                                                                     !users[0]
                                                                         .profileImage
-                                                                 ? 'invert':''}`}
+                                                                        ? "invert"
+                                                                        : ""
+                                                                }`}
                                                                 src={
                                                                     users[0]
                                                                         .profileImage
