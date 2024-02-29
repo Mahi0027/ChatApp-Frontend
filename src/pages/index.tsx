@@ -2,6 +2,8 @@ import Dashboard from "@/src/modules/dashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { dashboardContext } from "@/src/context";
+import screenfull from "screenfull";
+import Button from "../components/button";
 
 /* define type of status start. */
 type dashboardTypeType = {
@@ -41,6 +43,7 @@ export type ListOfAllUserType = {
 /* define type of status end. */
 
 export default function Home() {
+    const [showFullScreenButton, setShowFullScreenButton] = useState(false);
     /* state variable declaration start. */
     const [dashboardType, setDashboardType] = useState<dashboardTypeType>({
         chat: true,
@@ -81,6 +84,14 @@ export default function Home() {
     /* state variable declaration end. */
 
     useEffect(() => {
+        if (window.innerWidth < 640) {
+            setShowFullScreenButton(true);
+        } else {
+            setShowFullScreenButton(false);
+        }
+    }, [])
+    
+    useEffect(() => {
         if (adminUser.theme) {
             toggleTheme(adminUser.theme);
         }
@@ -100,6 +111,22 @@ export default function Home() {
             }
         });
     };
+
+    function fullScreen(): void {
+        setShowFullScreenButton(false);
+        if (screenfull.isEnabled) {
+            const elem: any = document.documentElement; // You can use document.documentElement to request fullscreen for the entire document.
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+    }
     return (
         <>
             <ProtectedRoute auth={true}>
@@ -118,7 +145,13 @@ export default function Home() {
                             toggleTheme,
                         }}
                     >
-                        <Dashboard />
+                        {showFullScreenButton && <Button
+                            label="Full Screen"
+                            type="button"
+                            className="w-5/6 sm:w-2/3 md:w-1/2 mb-2 h-20 text-white text-2xl bg-primary hover:bg-primary"
+                            onClick={fullScreen}
+                        />}
+                        {!showFullScreenButton && <Dashboard />}
                     </dashboardContext.Provider>
                 </div>
             </ProtectedRoute>

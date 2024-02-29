@@ -264,7 +264,7 @@ const MenuSection = ({
                         onChange={(e: any) => setSearchText(e.target.value)}
                     />
                 )}
-                <div className="h-full overflow-y-auto scroll-smooth pb-10">
+                <div className="h-5/6 md:h-full overflow-y-auto scroll-smooth pb-10">
                     {/* all users list. */}
                     {dashboardType.user && (
                         <>

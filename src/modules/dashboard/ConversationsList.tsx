@@ -381,7 +381,7 @@ const ConversationsList = ({
                             {currentConversationUser.isGroup
                                 ? currentConversationUser.groupName && (
                                       <div
-                                          className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5  rounded-full flex items-center px-2 md:px-6 ${
+                                          className={`w-4/5 sm:w-3/4 h-[80px] mt-14 mb-0.5 rounded-full flex items-center px-2 md:px-6 ${
                                               theme === "light"
                                                   ? "bg-light-background"
                                                   : theme === "dark"
@@ -489,7 +489,7 @@ const ConversationsList = ({
                             {/* message box. */}
                             {messages.length > 0 ? (
                                 <div
-                                    className="h-4/5 w-full overflow-y-auto scroll-smooth"
+                                    className="h-2/3 md:h-4/5 w-full overflow-y-auto scroll-smooth"
                                     ref={containerRef}
                                 >
                                     <div className="p-2 sm:p-5 md:p-10">
@@ -643,7 +643,7 @@ const ConversationsList = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="h-3/4 w-full flex flex-col justify-center">
+                                <div className="h-4/5 w-full flex flex-col justify-center">
                                     {currentConversationUser.isGroup ? (
                                         <div className="text-center text-lg font-semibold px-5">
                                             No Messages yet. say <b>Hi</b> and
@@ -665,7 +665,7 @@ const ConversationsList = ({
                                 </div>
                             )}
                             {/* texting area. */}
-                            <div className="p-2 w-full flex items-center">
+                            <div className="p-2 px-4 w-full flex items-center">
                                 <Input
                                     placeholder="Type a message..."
                                     className="w-full"
