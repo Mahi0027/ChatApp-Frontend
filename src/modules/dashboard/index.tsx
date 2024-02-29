@@ -168,8 +168,8 @@ const Dashboard = () => {
         }
 
         // Add a resize event listener
-        window.addEventListener("resize", handleResizeScreenSize);
-
+        // window.addEventListener("resize", handleResizeScreenSize);
+        handleResizeScreenSize();
         // Clean up the event listener when the component is unmounted
         return () => {
             window.removeEventListener("resize", handleResizeScreenSize);
