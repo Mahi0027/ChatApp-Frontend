@@ -20,10 +20,6 @@ export default function App({ Component, pageProps }: AppProps) {
         });
 
     const [activeUsers, setActiveUsers] = useState<any>([]);
-
-    useEffect(() => {
-        // fullScreen();
-    }, [])
     
     return (
         <primaryContext.Provider
